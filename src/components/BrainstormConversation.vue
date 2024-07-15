@@ -32,16 +32,15 @@ const pastDue = computed(() => {
   return false
 })
 
+const myMessages = computed(() => {
+  return koreroStore.messages.filter((m) => m.author === koreroStore.user.id)
+})
+
 const canWrite = computed(() => {
   if (pastDue.value) {
     return true
   }
-  for (const message of koreroStore.messages) {
-    if (message.author === koreroStore.user.id) {
-      return true
-    }
-  }
-  return false
+  return myMessages.value.length === 0
 })
 </script>
 
@@ -50,13 +49,20 @@ const canWrite = computed(() => {
     <ToastUiViewer :initialValue="brainstorm.message" />
   </div>
 
-  <p v-if="pastDue">Was due on: {{ brainstorm.due }}</p>
-  <p v-else>Due: {{ brainstorm.due }}</p>
+  <div v-if="pastDue">
+    <p>Was due on: {{ brainstorm.due }}</p>
+    <!-- Start comment thread -->
+    <div v-for="message in koreroStore.messages" :key="message.id" class="border p-4">
+      <ToastUiViewer :initialValue="message.text" />
+    </div>
+  </div>
 
-  <!-- Start comment thread -->
-
-  <div v-for="message in koreroStore.messages" :key="message.id" class="border p-4">
-    <ToastUiViewer :initialValue="message.text" />
+  <div v-else>
+    <p>Due: {{ brainstorm.due }}</p>
+    <!-- Show my message -->
+    <div v-for="message in myMessages" :key="message.id" class="border p-4">
+      <ToastUiViewer :initialValue="message.text" />
+    </div>
   </div>
 
   <div v-if="canWrite">

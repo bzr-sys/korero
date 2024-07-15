@@ -242,12 +242,3 @@ export const useKoreroStore = defineStore('korero', () => {
     updateConversation
   }
 })
-
-// TODO
-
-//
-// * Start multi-user / team functionalities
-// * Add message edits & maybe history
-
-// ISSUES
-// * ToastUI Viewer allows to flip checkboxes, but wont save (try with Milkdown)
