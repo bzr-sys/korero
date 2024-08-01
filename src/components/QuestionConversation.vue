@@ -43,8 +43,8 @@ const chosenAnswer = computed(() =>
 <template>
   <ToastUiViewer :initialValue="question.message" />
 
-  <div class="pt-8">
-    <ChatMessage v-if="chosenAnswer" :message="chosenAnswer" />
+  <div v-if="chosenAnswer" class="pt-8">
+    <ChatMessage :message="chosenAnswer" />
     <div class="badge badge-success">Chosen Answer</div>
   </div>
 
