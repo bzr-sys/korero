@@ -2,10 +2,12 @@ import { BazaarApp, type BazaarOptions } from '@bzr/bazaar'
 
 const baseURL = window.location.origin + window.location.pathname
 
+console.log('baseURL', baseURL)
+
 console.log('app id', import.meta.env.VITE_APP_ID)
 
 const config: BazaarOptions = {
-  appId: import.meta.env.VITE_APP_ID,
+  appId: import.meta.env.VITE_APP_ID || 'test',
   loginRedirectUri: `${baseURL}`,
   onApiConnectError: async function (bzr: BazaarApp, message: string) {
     console.log('OnConnectError', message)

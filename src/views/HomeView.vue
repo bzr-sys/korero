@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-
 import { useKoreroStore } from '@/stores/korero'
 import router from '@/router'
+import ClickableCard from '@/components/ClickableCard.vue'
+import HeadingOne from '@/components/HeadingOne.vue'
 
 const koreroStore = useKoreroStore()
 if (!koreroStore.config) {
@@ -20,16 +20,6 @@ function chooseOrg() {
   koreroStore.setOrg(koreroStore.user.id)
 }
 
-const channelName = ref('')
-
-function createChannel() {
-  if (!channelName.value) {
-    return
-  }
-  koreroStore.createChannel(channelName.value)
-  channelName.value = ''
-}
-
 function goToChannel(channelId: string) {
   if (channelId) {
     router.push({ name: 'channel', params: { id: channelId } })
@@ -39,35 +29,29 @@ function goToChannel(channelId: string) {
 
 <template>
   <main>
-    <div v-if="!koreroStore.config">
-      <button
-        @click="chooseOrg"
-        class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-      >
-        Choose org
-      </button>
+    <div v-if="!koreroStore.config" class="text-center">
+      <HeadingOne class="text-center pb-6">Get started</HeadingOne>
+      <button @click="chooseOrg" class="btn btn-primary">Choose organization</button>
     </div>
 
     <div v-else>
-      <p>Team is {{ koreroStore.config.currentTeam }}</p>
-      <input v-model="channelName" class="border bg-orange-50" />
-      <button
-        @click="createChannel"
-        class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-      >
-        Create channel
-      </button>
-      <div class="py-4 grid grid-cols-3">
-        <div
+      <div class="flex gap-4 justify-between items-center">
+        <HeadingOne class="text-center">Channels</HeadingOne>
+        <RouterLink :to="{ name: 'newChannel' }" class="btn btn-sm btn-primary"
+          >Create a new channel</RouterLink
+        >
+      </div>
+
+      <div class="grid grid-cols-3 gap-4 py-4">
+        <ClickableCard
           v-for="channel in koreroStore.channels"
           :key="channel.id"
-          class="border-2 border-orange-500 p-8"
           @click="goToChannel(channel.id)"
+          class="mb-4"
         >
-          <p>{{ channel.name }}</p>
-        </div>
+          <h2 class="card-title">{{ channel.name }}</h2>
+        </ClickableCard>
       </div>
     </div>
   </main>
 </template>
-@/stores/korero

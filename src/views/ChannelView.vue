@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-
+import { computed } from 'vue'
 import { useKoreroStore } from '@/stores/korero'
 import router from '@/router'
+import ClickableCard from '@/components/ClickableCard.vue'
+import HeadingOne from '@/components/HeadingOne.vue'
 
 const channelId = router.currentRoute.value.params.id
 
@@ -29,30 +30,29 @@ function goToConversation(channelId: string) {
 </script>
 
 <template>
-  <p>Channel is {{ channelName }}</p>
-  <button
-    @click="newConversation"
-    class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-  >
-    New Conversation
-  </button>
-  <RouterLink
-    :to="{ name: 'home' }"
-    class="inline-block bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-  >
-    Go home
-  </RouterLink>
-  <div class="py-4 grid grid-cols-3">
-    <div
-      v-for="conversations in koreroStore.conversations"
-      :key="conversations.id"
-      class="border-2 border-orange-500 p-8"
-      @click="goToConversation(conversations.id)"
-    >
-      <p>{{ conversations.title }}</p>
+  <div class="text-center pb-12">
+    <div class="badge badge-neutral">
+      <span class="sr-only">Channel name: </span>{{ channelName }}
     </div>
+  </div>
+
+  <div class="flex gap-4 justify-between items-center">
+    <HeadingOne class="text-center">Conversations</HeadingOne>
+    <button @click="newConversation" class="btn btn-sm btn-primary">New conversation</button>
+  </div>
+
+  <div class="py-4 grid grid-cols-3 gap-4">
+    <ClickableCard
+      v-for="conversation in koreroStore.conversations"
+      :key="conversation.id"
+      @click="goToConversation(conversation.id)"
+    >
+      <div class="flex gap-4 justify-between items-center">
+        <div>{{ conversation.title }}</div>
+        <div class="badge badge-secondary">{{ conversation.type }}</div>
+      </div>
+    </ClickableCard>
   </div>
 </template>
 
 <style></style>
-@/stores/korero

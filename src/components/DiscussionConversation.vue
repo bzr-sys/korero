@@ -2,8 +2,10 @@
 import { ref } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
+import HeadingTwo from '@/components/HeadingTwo.vue'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
+import ChatMessage from '@/components/ChatMessage.vue'
 import { MessageType, type Discussion } from '@/types'
 
 const koreroStore = useKoreroStore()
@@ -27,28 +29,22 @@ async function postMessage() {
 </script>
 
 <template>
-  <div class="border p-4">
-    <ToastUiViewer :initialValue="discussion.message" />
-  </div>
+  <ToastUiViewer :initialValue="discussion.message" />
 
-  <div v-for="message in koreroStore.messages" :key="message.id" class="border p-4">
-    <ToastUiViewer :initialValue="message.text" />
-  </div>
+  <HeadingTwo class="pt-8 text-center">Comments</HeadingTwo>
+
+  <ChatMessage v-for="message in koreroStore.messages" :key="message.id" :message="message" />
+
+  <ToastUiEditor
+    @updateValue="(t) => (newMessage = t)"
+    label="Write a comment"
+    height="auto"
+    initialEditType="markdown"
+    ref="editor"
+  />
 
   <div>
-    <p>Write a comment</p>
-    <ToastUiEditor
-      @updateValue="(t) => (newMessage = t)"
-      height="auto"
-      initialEditType="markdown"
-      ref="editor"
-    />
-    <button
-      @click="postMessage"
-      class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-    >
-      Post Message
-    </button>
+    <button @click="postMessage" class="btn btn-primary mt-4">Comment</button>
   </div>
 </template>
 

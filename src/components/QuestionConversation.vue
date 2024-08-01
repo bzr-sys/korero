@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
+import HeadingTwo from '@/components/HeadingTwo.vue'
+import ChatMessage from '@/components/ChatMessage.vue'
 import { MessageType, type Question } from '@/types'
 
 const koreroStore = useKoreroStore()
@@ -32,49 +34,41 @@ async function markAnswer(messageId: string) {
     answer: messageId
   })
 }
+
+const chosenAnswer = computed(() =>
+  koreroStore.messages.find((answer) => answer.id === question.answer)
+)
 </script>
 
 <template>
-  <div class="border p-4">
-    <ToastUiViewer :initialValue="question.message" />
+  <ToastUiViewer :initialValue="question.message" />
+
+  <div class="pt-8">
+    <ChatMessage v-if="chosenAnswer" :message="chosenAnswer" />
+    <div class="badge badge-success">Chosen Answer</div>
   </div>
 
-  <div v-if="question.answer">
-    <p>Answered in: {{ question.answer }}</p>
-  </div>
+  <HeadingTwo class="pt-8 text-center">Answers</HeadingTwo>
 
-  <!-- Start comment thread -->
-
-  <div v-for="message in koreroStore.messages" :key="message.id" class="border p-4">
-    <div v-if="question.answer == message.id">
-      <p>This is the answer:</p>
-    </div>
-    <div v-else-if="!question.answer && question.author == koreroStore.user.id">
-      <button
-        @click="markAnswer(message.id)"
-        class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-      >
+  <div v-for="message in koreroStore.messages" :key="message.id">
+    <ChatMessage :message="message" />
+    <div v-if="question.answer == message.id" class="badge badge-success">Chosen Answer</div>
+    <div v-else-if="!question.answer && question.authorId == koreroStore.user.id">
+      <button @click="markAnswer(message.id)" class="btn btn-sm btn-primary mt-4">
         Mark as answer
       </button>
     </div>
-
-    <ToastUiViewer :initialValue="message.text" />
   </div>
 
   <div v-if="!question.answer">
-    <p>Write a comment</p>
     <ToastUiEditor
       @updateValue="(t) => (newMessage = t)"
+      label="Write a comment"
       height="auto"
       initialEditType="markdown"
       ref="editor"
     />
-    <button
-      @click="postMessage"
-      class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-    >
-      Post Message
-    </button>
+    <button @click="postMessage" class="btn mt-4">Comment</button>
   </div>
 </template>
 

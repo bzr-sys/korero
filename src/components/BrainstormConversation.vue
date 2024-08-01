@@ -2,8 +2,11 @@
 import { ref, computed } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
+import FormatDateString from '@/components/FormatDateString.vue'
+import HeadingTwo from './HeadingTwo.vue'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
+import ChatMessage from './ChatMessage.vue'
 import { MessageType, type Brainstorm } from '@/types'
 
 const koreroStore = useKoreroStore()
@@ -33,7 +36,7 @@ const pastDue = computed(() => {
 })
 
 const myMessages = computed(() => {
-  return koreroStore.messages.filter((m) => m.author === koreroStore.user.id)
+  return koreroStore.messages.filter((m) => m.authorId === koreroStore.user.id)
 })
 
 const canWrite = computed(() => {
@@ -45,42 +48,33 @@ const canWrite = computed(() => {
 </script>
 
 <template>
-  <div class="border p-4">
-    <ToastUiViewer :initialValue="brainstorm.message" />
-  </div>
+  <FormatDateString class="text-center" :dateString="brainstorm.due" />
 
-  <div v-if="pastDue">
-    <p>Was due on: {{ brainstorm.due }}</p>
-    <!-- Start comment thread -->
-    <div v-for="message in koreroStore.messages" :key="message.id" class="border p-4">
-      <ToastUiViewer :initialValue="message.text" />
-    </div>
-  </div>
+  <ToastUiViewer :initialValue="brainstorm.message" />
 
-  <div v-else>
-    <p>Due: {{ brainstorm.due }}</p>
-    <!-- Show my message -->
-    <div v-for="message in myMessages" :key="message.id" class="border p-4">
-      <ToastUiViewer :initialValue="message.text" />
-    </div>
-  </div>
+  <template v-if="pastDue">
+    <HeadingTwo class="pt-8 text-center">Messages</HeadingTwo>
 
-  <div v-if="canWrite">
-    <p v-if="pastDue">Add a comment</p>
-    <p v-else>Add your brainstorm suggestion</p>
+    <ChatMessage v-for="message in koreroStore.messages" :key="message.id" :message="message" />
+  </template>
+
+  <template v-else>
+    <HeadingTwo class="pt-8 text-center">My Suggestion</HeadingTwo>
+    <ToastUiViewer v-for="message in myMessages" :key="message.id" :initialValue="message.text" />
+  </template>
+
+  <template v-if="canWrite">
     <ToastUiEditor
       @updateValue="(t) => (newMessage = t)"
+      :label="pastDue ? 'Add a comment' : 'Add your brainstorm suggestion'"
       height="auto"
       initialEditType="markdown"
       ref="editor"
     />
-    <button
-      @click="postMessage"
-      class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-    >
-      Post Message
-    </button>
-  </div>
+    <div>
+      <button @click="postMessage" class="btn btn-primary mt-4">Post message</button>
+    </div>
+  </template>
 </template>
 
 <style></style>
