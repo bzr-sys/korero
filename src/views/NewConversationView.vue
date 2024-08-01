@@ -3,11 +3,13 @@ import { computed, ref } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
 import router from '@/router'
+import BaseCard from '@/components/BaseCard.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
-import { ConversationType, PollType, Agency, type Conversation } from '@/types'
-import type { Meeting } from '@/types'
-import type { Poll } from '@/types'
-import type { Brainstorm } from '@/types'
+import HeadingOne from '@/components/HeadingOne.vue'
+import BaseLegend from '@/components/BaseLegend.vue'
+import { ConversationType, Agency } from '@/types'
+import type { Meeting, Poll, Brainstorm, Conversation } from '@/types'
+import { dateObjToDatetimeLocalFormat } from '@/date'
 
 const channelId = router.currentRoute.value.params.id
 
@@ -29,16 +31,17 @@ const channelName = computed(() => {
 })
 
 async function createConversation() {
+  // console.log('createConversation')
   if (!message.value || !title.value) {
     return
   }
   //
   let c: Omit<Conversation, 'id'> = {
     channelId: channelId as string,
-    author: koreroStore.user.id,
+    authorId: koreroStore.user.id,
     title: title.value,
     archived: false,
-    created: new Date(),
+    created: dateObjToDatetimeLocalFormat(),
     //
     message: message.value,
     reactions: [],
@@ -47,6 +50,7 @@ async function createConversation() {
   }
   switch (chosenType.value) {
     case ConversationType.MEETING:
+      // console.log('case is Meeting')
       c = {
         ...c,
         date: date.value,
@@ -54,11 +58,11 @@ async function createConversation() {
           setting: agendaSetting.value,
           decision: agendaDecision.value,
           due: due.value,
-          items: agendaItemTitles.value.map((t, i) => {
+          items: agendaItems.value.map((item, index) => {
             return {
-              index: i,
-              title: t,
-              text: agendaItemTexts.value[i],
+              index,
+              title: item.title,
+              text: item.text,
               approved: false,
               votes: []
             }
@@ -69,7 +73,7 @@ async function createConversation() {
     case ConversationType.POLL:
       c = {
         ...c,
-        pollType: pollType.value,
+        multipleAnswers: multipleAnswers.value,
         items: pollOptions.value.map((t, i) => {
           return { index: i, text: t, votes: [] }
         }),
@@ -92,191 +96,265 @@ async function createConversation() {
   router.push({ name: 'conversation', params: { id: id } })
 }
 
+function addAgendaItem() {
+  agendaItems.value.push({ ...emptyAgendaItem })
+}
+
+function addPollOption() {
+  pollOptions.value.push('')
+}
+
 const conversationTypes = ref([] as { id: string; value: string }[])
 for (const t of Object.values(ConversationType)) {
   conversationTypes.value.push({ id: t, value: t.charAt(0).toUpperCase() + t.slice(1) })
 }
 
-const chosenType = ref(ConversationType.DISCUSSION)
+const chosenType = ref(ConversationType.POLL)
 const messageDescription = computed(() => {
   switch (chosenType.value) {
     case ConversationType.MEETING:
-      return 'Brief meeting description'
+      return 'What is the meeting about?'
     case ConversationType.POLL:
-      return 'Brief poll description'
+      return 'What is the poll about?'
     case ConversationType.BRAINSTORM:
-      return 'Whats are you brainstorming?'
+      return 'What are you brainstorming?'
     case ConversationType.DISCUSSION:
       return 'Start your discussion'
     case ConversationType.ANNOUNCEMENT:
-      return 'Whats going on?'
+      return "What's going on?"
     case ConversationType.QUESTION:
-      return 'Whats answers are you seeking?'
+      return 'What answers are you seeking?'
     default:
       return 'Start your conversation'
   }
 })
+
+const emptyAgendaItem = { title: '', text: '' }
+
 const title = ref('')
 const message = ref('')
-const pollOptions = ref(['', '', ''])
-const pollType = ref(PollType.SINGLE)
+const pollOptions = ref(['', ''])
+const multipleAnswers = ref(false)
 const agendaSetting = ref(Agency.OWNER)
 const agendaDecision = ref(Agency.OWNER)
-const agendaItemTitles = ref(['', '', ''])
-const agendaItemTexts = ref(['', '', ''])
-const due = ref(new Date())
-const date = ref(new Date())
+const agendaItems = ref([{ ...emptyAgendaItem }])
+const due = ref('')
+const date = ref('')
+
+const dateMin = dateObjToDatetimeLocalFormat()
 </script>
 
 <template>
-  <p>Channel is {{ channelName }}</p>
-  <RouterLink
-    :to="{ name: 'channel', params: { id: channelId } }"
-    class="inline-block bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-  >
-    Go back to channel
-  </RouterLink>
-
-  <p>This conversation is a</p>
-  <div>
-    <template v-for="t in conversationTypes">
-      <input type="radio" :id="t.id" :value="t.id" v-model="chosenType" />
-      <label :for="t.id">{{ t.value }}</label>
-    </template>
-  </div>
-
-  <div>
-    <span>Title</span>
-    <input type="text" v-model="title" class="border" />
-  </div>
-
-  <div>
-    <p>{{ messageDescription }}</p>
-    <ToastUiEditor @updateValue="(t) => (message = t)" height="auto" initialEditType="markdown" />
-
-    <!-- MEETING -->
-
-    <div v-if="chosenType === ConversationType.MEETING">
-      <div>
-        <span>Date</span>
-        <input type="datetime-local" v-model="date" class="border" />
-      </div>
-      <p>Agenda</p>
-      <div>
-        <input
-          type="radio"
-          :id="'AgendaSetting' + Agency.OWNER"
-          :value="Agency.OWNER"
-          v-model="agendaSetting"
-        />
-        <label :for="'AgendaSetting' + Agency.OWNER">You set agenda now</label>
-        <input
-          type="radio"
-          :id="'AgendaSetting' + Agency.COLLAB"
-          :value="Agency.COLLAB"
-          v-model="agendaSetting"
-        />
-        <label :for="'AgendaSetting' + Agency.COLLAB">Set agenda collaboratively</label>
-      </div>
-      <div v-if="agendaSetting == Agency.COLLAB">
-        <span>Due</span>
-        <input type="datetime-local" v-model="due" class="border" />
-      </div>
-      <div>
-        <input
-          type="radio"
-          :id="'AgendaDecision' + Agency.OWNER"
-          :value="Agency.OWNER"
-          v-model="agendaDecision"
-        />
-        <label :for="'AgendaDecision' + Agency.OWNER">You decide about agenda items</label>
-        <input
-          type="radio"
-          :id="'AgendaDecision' + Agency.COLLAB"
-          :value="Agency.COLLAB"
-          v-model="agendaDecision"
-        />
-        <label :for="'AgendaDecision' + Agency.COLLAB">Vote for agenda items</label>
-      </div>
-      <p>Agenda items -- TODO: add ability to have arbitrary # of items</p>
-      <div>
-        <p>Item 1 -- TODO this should be only items if not collaborative or voted</p>
-        <span>Title</span>
-        <input type="text" v-model="agendaItemTitles[0]" class="border" />
-        <ToastUiEditor
-          @updateValue="(t) => (agendaItemTexts[0] = t)"
-          height="auto"
-          initialEditType="markdown"
-        />
-      </div>
-      <div>
-        <p>Item 2</p>
-        <span>Title</span>
-        <input type="text" v-model="agendaItemTitles[1]" class="border" />
-        <ToastUiEditor
-          @updateValue="(t) => (agendaItemTexts[1] = t)"
-          height="auto"
-          initialEditType="markdown"
-        />
-      </div>
-      <div>
-        <p>Item 3</p>
-        <span>Title</span>
-        <input type="text" v-model="agendaItemTitles[2]" class="border" />
-        <ToastUiEditor
-          @updateValue="(t) => (agendaItemTexts[2] = t)"
-          height="auto"
-          initialEditType="markdown"
-        />
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center pb-12">
+      <div class="badge badge-neutral">
+        <RouterLink :to="{ name: 'channel', params: { id: channelId } }">
+          <span class="sr-only">Channel name: </span>{{ channelName }}
+        </RouterLink>
       </div>
     </div>
 
-    <!-- POLL -->
+    <HeadingOne class="pb-6">Create a new conversation</HeadingOne>
 
-    <div v-else-if="chosenType === ConversationType.POLL">
-      <p>Poll options -- TODO: add ability to have arbitrary # of options</p>
-      <div>
-        <span>Option 1</span>
-        <input type="text" v-model="pollOptions[0]" class="border" />
-      </div>
-      <div>
-        <span>Option 2</span>
-        <input type="text" v-model="pollOptions[1]" class="border" />
-      </div>
-      <div>
-        <span>Option 3</span>
-        <input type="text" v-model="pollOptions[2]" class="border" />
-      </div>
-      <div>
-        <p>Options allowed to choose:</p>
-        <input type="radio" :id="PollType.SINGLE" :value="PollType.SINGLE" v-model="pollType" />
-        <label :for="PollType.SINGLE">{{ PollType.SINGLE }}</label>
-        <input type="radio" :id="PollType.MULTIPLE" :value="PollType.MULTIPLE" v-model="pollType" />
-        <label :for="PollType.MULTIPLE">{{ PollType.MULTIPLE }}</label>
-      </div>
-      <div>
-        <span>Due</span>
-        <input type="datetime-local" v-model="due" class="border" />
-      </div>
-    </div>
+    <form @submit.prevent="createConversation">
+      <fieldset>
+        <BaseLegend>Choose conversation type</BaseLegend>
+        <div class="max-w-xs mb-8">
+          <div v-for="t in conversationTypes" :key="t.id" class="form-control">
+            <label class="label cursor-pointer">
+              <span class="label-text">{{ t.value }}</span>
+              <input type="radio" class="radio" :value="t.id" v-model="chosenType" />
+            </label>
+          </div>
+        </div>
+      </fieldset>
 
-    <!-- BRAINSTORM -->
+      <label class="form-control mb-8">
+        <div class="label">
+          <span class="label-text">Title</span>
+        </div>
+        <input v-model="title" type="text" class="input input-bordered" required />
+      </label>
 
-    <div v-else-if="chosenType === ConversationType.BRAINSTORM">
       <div>
-        <span>Due</span>
-        <input type="datetime-local" v-model="due" class="border" />
+        <ToastUiEditor
+          @updateValue="(t) => (message = t)"
+          :label="messageDescription"
+          height="auto"
+          initialEditType="markdown"
+          class="mb-8"
+        />
+
+        <!-- MEETING -->
+
+        <div v-if="chosenType === ConversationType.MEETING">
+          <label class="form-control mb-8">
+            <div class="label">
+              <span class="label-text">Date</span>
+            </div>
+            <input
+              type="datetime-local"
+              v-model="date"
+              class="input input-bordered"
+              :min="dateMin"
+              required
+            />
+          </label>
+
+          <fieldset>
+            <BaseLegend>Agenda settings</BaseLegend>
+            <div class="max-w-xs mb-8">
+              <div class="form-control">
+                <label class="label cursor-pointer">
+                  <span class="label-text">You set agenda now</span>
+                  <input type="radio" class="radio" :value="Agency.OWNER" v-model="agendaSetting" />
+                </label>
+              </div>
+              <div class="form-control">
+                <label class="label cursor-pointer">
+                  <span class="label-text">Set agenda collaboratively</span>
+                  <input
+                    type="radio"
+                    class="radio"
+                    :value="Agency.COLLAB"
+                    v-model="agendaSetting"
+                  />
+                </label>
+              </div>
+            </div>
+          </fieldset>
+
+          <div v-if="agendaSetting == Agency.COLLAB">
+            <label class="form-control mb-8">
+              <div class="label">
+                <span class="label-text">Agenda Item Proposal Due Date</span>
+              </div>
+              <input
+                type="datetime-local"
+                v-model="due"
+                class="input input-bordered"
+                :min="dateMin"
+                required
+              />
+            </label>
+
+            <fieldset>
+              <legend class="sr-only">Agenda Proposed Items Decision Process</legend>
+              <div class="max-w-xs mb-8">
+                <div class="form-control">
+                  <label :for="'AgendaDecision' + Agency.OWNER" class="label cursor-pointer">
+                    <span class="label-text">You decide about agenda items</span>
+                    <input
+                      type="radio"
+                      :id="'AgendaDecision' + Agency.OWNER"
+                      class="radio"
+                      :value="Agency.OWNER"
+                      v-model="agendaDecision"
+                    />
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label :for="'AgendaDecision' + Agency.COLLAB" class="label cursor-pointer">
+                    <span class="label-text">Vote for agenda items</span>
+                    <input
+                      type="radio"
+                      :id="'AgendaDecision' + Agency.COLLAB"
+                      class="radio"
+                      :value="Agency.COLLAB"
+                      v-model="agendaDecision"
+                    />
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+          </div>
+
+          <fieldset>
+            <BaseLegend>Agenda items</BaseLegend>
+
+            <button class="btn btn-sm mb-4" type="button" @click="addAgendaItem">Add item</button>
+
+            <BaseCard v-for="(item, index) in agendaItems" :key="index" class="mb-4">
+              <div>Agenda item {{ index + 1 }}</div>
+
+              <label class="form-control mb-8">
+                <div class="label">
+                  <span class="label-text">Title</span>
+                </div>
+                <input v-model="item.title" type="text" class="input input-bordered" required />
+              </label>
+
+              <ToastUiEditor
+                @updateValue="(t) => (item.text = t)"
+                label="Description"
+                height="auto"
+                initialEditType="markdown"
+              />
+            </BaseCard>
+          </fieldset>
+        </div>
+
+        <!-- POLL -->
+
+        <div v-else-if="chosenType === ConversationType.POLL">
+          <label class="form-control mb-8">
+            <div class="label">
+              <span class="label-text">Due</span>
+            </div>
+            <input
+              type="datetime-local"
+              v-model="due"
+              class="input input-bordered"
+              :min="dateMin"
+              required
+            />
+          </label>
+
+          <fieldset class="mb-4">
+            <BaseLegend>Poll options</BaseLegend>
+
+            <button class="btn btn-sm mb-4" type="button" @click="addPollOption">Add option</button>
+
+            <label v-for="(option, index) in pollOptions" :key="index" class="form-control mb-4">
+              <div class="label">
+                <span class="label-text sr-only">Option {{ index + 1 }}</span>
+              </div>
+              <input
+                v-model="pollOptions[index]"
+                type="text"
+                class="input input-bordered"
+                required
+              />
+            </label>
+          </fieldset>
+
+          <div class="form-control max-w-xs mb-8">
+            <label class="label cursor-pointer">
+              <span class="label-text">Allow multiple answers</span>
+              <input v-model="multipleAnswers" type="checkbox" class="toggle" />
+            </label>
+          </div>
+        </div>
+
+        <!-- BRAINSTORM -->
+
+        <label v-else-if="chosenType === ConversationType.BRAINSTORM" class="form-control mb-8">
+          <div class="label">
+            <span class="label-text">Due</span>
+          </div>
+          <input
+            type="datetime-local"
+            v-model="due"
+            class="input input-bordered"
+            :min="dateMin"
+            required
+          />
+        </label>
       </div>
-    </div>
+
+      <button class="btn btn-primary mt-4">Create conversation</button>
+    </form>
   </div>
-
-  <button
-    @click="createConversation"
-    class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-  >
-    Create Conversation
-  </button>
 </template>
 
 <style></style>
-@/stores/korero

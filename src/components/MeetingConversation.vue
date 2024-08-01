@@ -2,8 +2,12 @@
 import { computed, ref, type ComputedRef } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
+import HeadingTwo from '@/components/HeadingTwo.vue'
+import FormatDateString from '@/components/FormatDateString.vue'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
+import BaseCard from '@/components/BaseCard.vue'
+import ChatMessage from '@/components/ChatMessage.vue'
 import { Agency, MessageType, type AgendaItem, type Meeting } from '@/types'
 
 const koreroStore = useKoreroStore()
@@ -127,13 +131,12 @@ const messagesAfterNotes = computed(() => {
 </script>
 
 <template>
-  <p>Date & time: {{ meeting.date }}</p>
+  <FormatDateString class="text-center" :dateString="meeting.date" />
 
-  <div class="border p-4">
-    <ToastUiViewer :initialValue="meeting.message" />
-  </div>
+  <ToastUiViewer :initialValue="meeting.message" />
 
-  <p>Agenda</p>
+  <HeadingTwo class="pt-8 text-center">Agenda</HeadingTwo>
+
   <div v-if="meeting.agenda.decision == Agency.COLLAB && !agendaDue">
     <!-- Still need to vote, so we show unordered agenda items -->
     <div v-for="item in meeting.agenda.items" :key="item.index" class="border">
@@ -143,24 +146,18 @@ const messagesAfterNotes = computed(() => {
       <button
         v-if="item.votes.includes(koreroStore.user.id)"
         @click="unvoteAgendaItem(item.index)"
-        class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
+        class="btn"
       >
         Remove my vote
       </button>
-      <button
-        v-else
-        @click="voteAgendaItem(item.index)"
-        class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-      >
-        Vote for item
-      </button>
+      <button v-else @click="voteAgendaItem(item.index)" class="btn">Vote for item</button>
     </div>
   </div>
-  <div v-else>
+  <div v-else class="grid gap-8 mb-8">
     <!-- Show ordered agenda items -->
     <!-- TODO hide or minimize agenda if meeting has passed -->
-    <div v-for="item in sortedAgenda" :key="item.index" class="border">
-      <p class="font-bold">{{ item.title }}</p>
+    <BaseCard v-for="item in sortedAgenda" :key="item.index">
+      <div>{{ item.title }}</div>
       <ToastUiViewer :initialValue="item.text" />
       <div
         v-if="meeting.agenda.decision === Agency.OWNER && meeting.agenda.setting === Agency.COLLAB"
@@ -168,9 +165,9 @@ const messagesAfterNotes = computed(() => {
         <p v-if="item.approved">Approved</p>
         <p v-else-if="meetingPast">Rejected (TODO: should probably hide agenda text)</p>
         <button
-          v-else-if="meeting.author === koreroStore.user.id"
+          v-else-if="meeting.authorId === koreroStore.user.id"
           @click="approveAgendaItem(item.index)"
-          class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
+          class="btn"
         >
           Approve
         </button>
@@ -179,7 +176,7 @@ const messagesAfterNotes = computed(() => {
       <div v-else-if="meeting.agenda.decision === Agency.COLLAB">
         <p>Votes: {{ item.votes.length }}</p>
       </div>
-    </div>
+    </BaseCard>
   </div>
 
   <!-- Propose new agenda items -->
@@ -190,67 +187,56 @@ const messagesAfterNotes = computed(() => {
       <input type="text" v-model="agendaItemTitle" class="border" />
       <ToastUiEditor
         @updateValue="(t) => (agendaItemText = t)"
+        label="Agenda item text"
         height="auto"
         initialEditType="markdown"
         ref="editor"
       />
     </div>
-    <button
-      @click="addAgendaItem()"
-      class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-    >
-      Add Agenda Item
-    </button>
+    <button @click="addAgendaItem()" class="btn btn-sm">Add Agenda Item</button>
   </div>
 
-  <!-- Agenda is set, move on to coments and notes -->
+  <!-- Agenda is set, move on to comments and notes -->
   <div v-else>
     <!-- Show comment from before the meeting-->
     <!-- TODO minimize messages when we have notes -->
-    <div v-for="message in messagesBeforeNotes" :key="message.id" class="border p-4">
-      <ToastUiViewer :initialValue="message.text" />
-    </div>
+    <HeadingTwo v-if="messagesBeforeNotes.length" class="pt-8 text-center"
+      >Pre-Meeting Notes</HeadingTwo
+    >
+    <ChatMessage v-for="message in messagesBeforeNotes" :key="message.id" :message="message" />
 
-    <div v-if="meeting.notes" class="border-4 p-4">
+    <template v-if="meeting.notes">
+      <HeadingTwo class="pt-8 text-center">During-Meeting Notes</HeadingTwo>
       <ToastUiViewer :initialValue="meeting.notes" />
-    </div>
+    </template>
 
-    <div v-for="message in messagesAfterNotes" :key="message.id" class="border p-4">
-      <ToastUiViewer :initialValue="message.text" />
-    </div>
+    <HeadingTwo v-if="messagesAfterNotes.length" class="pt-8 text-center"
+      >Post-Meeting Notes</HeadingTwo
+    >
+    <ChatMessage v-for="message in messagesAfterNotes" :key="message.id" :message="message" />
 
     <!-- Add notes -->
     <!-- TODO highlight to make sure people know its notes and not a normal comment -->
     <div v-if="meetingPast && !meeting.notes">
-      <p>Add meeting notes</p>
       <ToastUiEditor
         @updateValue="(t) => (newMessage = t)"
+        label="Add meeting notes"
         height="auto"
         initialEditType="markdown"
         ref="editor"
       />
-      <button
-        @click="postMeetingNotes"
-        class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-      >
-        Post Meeting Notes
-      </button>
+      <button @click="postMeetingNotes" class="btn btn-primary mt-4">Post Meeting Notes</button>
     </div>
 
     <div v-else>
-      <p>Write a comment</p>
       <ToastUiEditor
         @updateValue="(t) => (newMessage = t)"
+        label="Write a comment"
         height="auto"
         initialEditType="markdown"
         ref="editor"
       />
-      <button
-        @click="postMessage"
-        class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded self-center"
-      >
-        Post Message
-      </button>
+      <button @click="postMessage" class="btn btn-primary mt-4">Comment</button>
     </div>
   </div>
 </template>

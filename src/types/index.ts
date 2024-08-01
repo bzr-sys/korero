@@ -1,4 +1,4 @@
-import type { Doc } from '@bzr/bazaar'
+import type { Doc, User } from '@bzr/bazaar'
 
 export type Config = Doc & {
   currentTeam: string
@@ -13,12 +13,18 @@ export type Channel = Doc & {
   // group: groupId, // needed for permissions & to show channel members if not using team scoped channels
 }
 
+/**
+ * String to be used for dates managed by the datetime-local input.
+ * The format is "YYYY-MM-DDTHH:mm" which is the result of Date.prototype.toISOString().slice(0, 16).
+ */
+export type DatetimeLocalInputString = string
+
 export type ConversationCommon = Doc & {
   channelId: string
   title: string
-  author: string
+  authorId: string
   archived: boolean
-  created: Date
+  created: DatetimeLocalInputString
   // TODO: how about edits?
 
   //
@@ -44,7 +50,7 @@ export type Discussion = ConversationCommon & {
 }
 export type Meeting = ConversationCommon & {
   type: ConversationType.MEETING
-  date: Date
+  date: DatetimeLocalInputString
   agenda: Agenda
   notes?: string
   // TODO add "interactive" features such as intention setting
@@ -58,20 +64,20 @@ export type Announcement = ConversationCommon & {
 }
 export type Poll = ConversationCommon & {
   type: ConversationType.POLL
-  pollType: PollType
+  multipleAnswers: boolean
   items: PollItem[]
-  due: Date
+  due: DatetimeLocalInputString
 }
 export type Brainstorm = ConversationCommon & {
   type: ConversationType.BRAINSTORM
-  due: Date
+  due: DatetimeLocalInputString
 }
 
 export type Agenda = {
   setting: Agency
   decision: Agency
   items: AgendaItem[]
-  due: Date
+  due: DatetimeLocalInputString
 }
 
 export type AgendaItem = {
@@ -94,17 +100,12 @@ export type PollItem = {
   votes: string[]
 }
 
-export enum PollType {
-  SINGLE = 'single',
-  MULTIPLE = 'multiple'
-}
-
 export type Conversation = Discussion | Meeting | Question | Announcement | Poll | Brainstorm
 
 export type Message = Doc & {
   conversationId: string
-  created: Date
-  author: string
+  created: DatetimeLocalInputString
+  authorId: string
   type: MessageType
   text: string
 }

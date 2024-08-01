@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import { bzr } from '@/bazaar'
@@ -10,21 +10,37 @@ import {
   type User
 } from '@bzr/bazaar'
 import type { Config, Conversation, Message } from '@/types'
+import { dateObjToDatetimeLocalFormat } from '@/date'
 
 const CONFIG_COLLECTION = 'configs'
 const CHANNEL_COLLECTION = 'channels'
 const CONVERSATION_COLLECTION = 'conversations'
 const MESSAGE_COLLECTION = 'messages'
 
+const emptyUser: User = {
+  id: '',
+  email: '',
+  name: '',
+  handle: ''
+}
+
 export const useKoreroStore = defineStore('korero', () => {
   const loaded = ref(false)
   const authenticated = ref(false)
-  const config = ref(undefined as Config | undefined)
-  const user = ref({
-    id: '',
-    email: '',
-    name: ''
-  } as User)
+  const config = ref<Config | undefined>(undefined)
+  const user = ref<User>(emptyUser)
+
+  /** A list of users, e.g. those who have authored messages  */
+  const users: Ref<User[]> = ref([])
+
+  function getUser(id: string): User {
+    const user = users.value.find((u) => u.id === id)
+    if (user) {
+      return user
+    }
+    cacheUser(id)
+    return emptyUser
+  }
 
   const configCollection = bzr.collection<Config>(CONFIG_COLLECTION)
 
@@ -47,7 +63,7 @@ export const useKoreroStore = defineStore('korero', () => {
         authenticated.value = true
         loaded.value = true
       } catch (e: unknown) {
-        console.error('Error during auto signin', e)
+        console.error('Error during auto-sign in', e)
       }
     } else {
       loaded.value = true
@@ -74,33 +90,34 @@ export const useKoreroStore = defineStore('korero', () => {
     name: string
   }
   const channels = ref([] as Channel[])
-  let unsubsribeChannels: (() => Promise<BazaarMessage>) | undefined = undefined
+  let unsubscribeChannels: (() => Promise<BazaarMessage>) | undefined = undefined
   // let channelCollection = undefined;
   async function syncChannels() {
     if (!config.value) {
       channels.value = []
     }
-    if (unsubsribeChannels) {
-      unsubsribeChannels()
-      unsubsribeChannels = undefined
+    if (unsubscribeChannels) {
+      unsubscribeChannels()
+      unsubscribeChannels = undefined
     }
 
     // TODO we currently do not support collection creation with a set userId
-    // unsubsribeChannels = await bzr
+    // unsubscribeChannels = await bzr
     //   .collection<Channel>(CHANNEL_COLLECTION, { userId: config.value!.currentTeam })
     //   .subscribeAll({}, arrayMirrorSubscribeListener<Channel>(channels.value))
-    unsubsribeChannels = await bzr
+    unsubscribeChannels = await bzr
       .collection<Channel>(CHANNEL_COLLECTION)
       .subscribeAll({}, arrayMirrorSubscribeListener<Channel>(channels.value))
     return
   }
 
-  async function createChannel(name: string) {
-    if (config.value) {
-      await bzr
-        .collection<Channel>(CHANNEL_COLLECTION, { userId: config.value!.currentTeam })
-        .insertOne({ name: name })
+  async function createChannel(name: string): Promise<string> {
+    if (!config.value) {
+      return ''
     }
+    return bzr
+      .collection<Channel>(CHANNEL_COLLECTION, { userId: config.value!.currentTeam })
+      .insertOne({ name: name })
   }
 
   //
@@ -109,7 +126,7 @@ export const useKoreroStore = defineStore('korero', () => {
 
   const currentChannel = ref(undefined as Channel | undefined)
   const conversations = ref([] as Conversation[])
-  let unsubsribeConversations: (() => Promise<BazaarMessage>) | undefined = undefined
+  let unsubscribeConversations: (() => Promise<BazaarMessage>) | undefined = undefined
 
   async function setChannel(id: string) {
     if (currentChannel.value && currentChannel.value.id === id) {
@@ -125,18 +142,22 @@ export const useKoreroStore = defineStore('korero', () => {
         .getOne(id)
     }
 
-    if (unsubsribeConversations) {
-      unsubsribeConversations()
-      unsubsribeConversations = undefined
+    if (unsubscribeConversations) {
+      unsubscribeConversations()
+      unsubscribeConversations = undefined
     }
 
     // TODO how to make sure only members of this channel can read these conversations?
-    unsubsribeConversations = await bzr
+    unsubscribeConversations = await bzr
       .collection<Conversation>(CONVERSATION_COLLECTION)
       .subscribeAll(
         { channelId: id },
         arrayMirrorSubscribeListener<Conversation>(conversations.value)
       )
+  }
+
+  function getChannel(id: string): Channel {
+    return channels.value.find((c) => c.id === id) || { id: '', name: 'Unknown Channel' }
   }
 
   async function createConversation(conversation: Omit<Conversation, 'id'>) {
@@ -157,17 +178,19 @@ export const useKoreroStore = defineStore('korero', () => {
     text: string
   }
   const currentConversation = ref(undefined as Conversation | undefined)
-  let unsubsribeConversation: (() => Promise<BazaarMessage>) | undefined = undefined
+  let unsubscribeConversation: (() => Promise<BazaarMessage>) | undefined = undefined
+
   const messages = ref([] as Message[])
-  let unsubsribeMessages: (() => Promise<BazaarMessage>) | undefined = undefined
+
+  let unsubscribeMessages: (() => Promise<BazaarMessage>) | undefined = undefined
 
   async function setConversation(id: string) {
     if (currentConversation.value && currentConversation.value.id === id) {
       return
     }
-    if (unsubsribeConversation) {
-      unsubsribeConversation()
-      unsubsribeConversation = undefined
+    if (unsubscribeConversation) {
+      unsubscribeConversation()
+      unsubscribeConversation = undefined
     }
 
     // Why not mirror currentConversation?
@@ -183,28 +206,44 @@ export const useKoreroStore = defineStore('korero', () => {
         .getOne(id)
     }
 
-    unsubsribeConversation = await bzr
+    unsubscribeConversation = await bzr
       .collection<Conversation>(CONVERSATION_COLLECTION, { userId: config.value!.currentTeam })
       .subscribeOne(id, { onChange: (_, newDoc) => (currentConversation.value = newDoc) })
 
-    if (unsubsribeMessages) {
-      unsubsribeMessages()
-      unsubsribeMessages = undefined
+    if (unsubscribeMessages) {
+      unsubscribeMessages()
+      unsubscribeMessages = undefined
     }
 
     // TODO how to make sure only members of this channel can read these messages?
     messages.value = []
-    unsubsribeMessages = await bzr
+    unsubscribeMessages = await bzr
       .collection<Message>(MESSAGE_COLLECTION)
       .subscribeAll({ conversationId: id }, arrayMirrorSubscribeListener<Message>(messages.value))
   }
 
-  async function createMessage(message: Omit<Message, 'id' | 'created' | 'author'>) {
+  async function createMessage(message: Omit<Message, 'id' | 'created' | 'authorId'>) {
     if (config.value) {
-      const newMessage = { ...message, created: new Date(), author: user.value.id }
+      const newMessage = {
+        ...message,
+        created: dateObjToDatetimeLocalFormat(),
+        authorId: user.value.id
+        // authorId: 'fa3b7079-daab-4d28-a356-8468a17434cd'
+      }
+
       return bzr
         .collection<Message>(MESSAGE_COLLECTION, { userId: config.value!.currentTeam })
         .insertOne(newMessage)
+    }
+  }
+
+  async function cacheUser(userId: string): Promise<void> {
+    const cachedUser = users.value.find((u) => u.id === userId)
+    if (!cachedUser) {
+      const fetchedUser = await bzr.social.getUser({ userId })
+      if (fetchedUser) {
+        users.value.push(fetchedUser)
+      }
     }
   }
 
@@ -218,6 +257,8 @@ export const useKoreroStore = defineStore('korero', () => {
 
   return {
     user,
+    getUser,
+    users,
     config,
     loaded,
     authenticated,
@@ -232,6 +273,7 @@ export const useKoreroStore = defineStore('korero', () => {
     currentChannel,
     conversations,
     setChannel,
+    getChannel,
     createConversation,
 
     // Conversation view

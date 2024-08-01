@@ -9,9 +9,7 @@ const announcement = koreroStore.currentConversation as Announcement
 </script>
 
 <template>
-  <div class="border p-4">
-    <ToastUiViewer :initialValue="announcement.message" />
-  </div>
+  <ToastUiViewer :initialValue="announcement.message" />
 </template>
 
 <style></style>

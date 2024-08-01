@@ -7,6 +7,7 @@ import { onMounted, ref, watch } from 'vue'
 
 const props = withDefaults(
   defineProps<{
+    label?: string
     height?: string
     initialEditType?: EditorType
   }>(),
@@ -54,8 +55,13 @@ watch(
 
 <template>
   <div>
+    <div v-if="props.label" class="label label-text">{{ props.label }}</div>
     <div ref="editor"></div>
   </div>
 </template>
 
-<style scoped></style>
+<style>
+.toastui-editor-main {
+  background-color: #fff;
+}
+</style>
