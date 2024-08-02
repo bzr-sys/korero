@@ -69,7 +69,7 @@ async function votePoll() {
   <ToastUiViewer :initialValue="poll.message" class="mb-4" />
 
   <!-- if due date in future -->
-  <template v-if="new Date(poll.due) < new Date()">
+  <template v-if="new Date(poll.due) > new Date()">
     <template v-if="canVote">
       <fieldset v-if="!poll.multipleAnswers" class="max-w-xs">
         <BaseLegend>Select one</BaseLegend>
