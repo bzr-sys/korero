@@ -109,7 +109,7 @@ for (const t of Object.values(ConversationType)) {
   conversationTypes.value.push({ id: t, value: t.charAt(0).toUpperCase() + t.slice(1) })
 }
 
-const chosenType = ref(ConversationType.POLL)
+const chosenType = ref(ConversationType.DISCUSSION)
 const messageDescription = computed(() => {
   switch (chosenType.value) {
     case ConversationType.MEETING:
