@@ -31,15 +31,17 @@ function goToChannel(channelId: string) {
   <main>
     <div v-if="!koreroStore.config" class="text-center">
       <HeadingOne class="text-center pb-6">Get started</HeadingOne>
-      <button @click="chooseOrg" class="btn btn-primary">Choose organization</button>
+      <button @click="chooseOrg" class="btn btn-accent">Choose organization</button>
     </div>
 
     <div v-else>
-      <div class="flex gap-4 justify-between items-center">
-        <HeadingOne class="text-center">Channels</HeadingOne>
-        <RouterLink :to="{ name: 'newChannel' }" class="btn btn-sm btn-primary"
-          >Create a new channel</RouterLink
-        >
+      <div class="text-center pb-12">
+        <HeadingOne class="text-center pb-6">Channels</HeadingOne>
+        <div>
+          <RouterLink :to="{ name: 'newChannel' }" class="btn btn-sm btn-accent"
+            >Create a new channel</RouterLink
+          >
+        </div>
       </div>
 
       <div class="grid grid-cols-3 gap-4 py-4">

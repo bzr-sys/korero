@@ -225,7 +225,7 @@ const messagesAfterNotes = computed(() => {
         initialEditType="markdown"
         ref="editor"
       />
-      <button @click="postMeetingNotes" class="btn btn-primary mt-4">Post Meeting Notes</button>
+      <button @click="postMeetingNotes" class="btn btn-accent mt-4">Post Meeting Notes</button>
     </div>
 
     <div v-else>
@@ -236,7 +236,7 @@ const messagesAfterNotes = computed(() => {
         initialEditType="markdown"
         ref="editor"
       />
-      <button @click="postMessage" class="btn btn-primary mt-4">Comment</button>
+      <button @click="postMessage" class="btn btn-accent mt-4">Comment</button>
     </div>
   </div>
 </template>

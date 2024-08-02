@@ -44,7 +44,7 @@ async function postMessage() {
   />
 
   <div>
-    <button @click="postMessage" class="btn btn-primary mt-4">Comment</button>
+    <button @click="postMessage" class="btn btn-accent mt-4">Comment</button>
   </div>
 </template>
 

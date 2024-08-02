@@ -38,7 +38,7 @@ async function createChannel() {
         <input v-model="channelName" type="text" class="input input-bordered mb-4" required />
       </label>
 
-      <button class="btn btn-primary">Create channel</button>
+      <button class="btn btn-accent">Create channel</button>
     </form>
   </div>
 </template>

@@ -9,6 +9,7 @@ import BrainstormConversation from '@/components/BrainstormConversation.vue'
 import QuestionConversation from '@/components/QuestionConversation.vue'
 import PollConversation from '@/components/PollConversation.vue'
 import MeetingConversation from '@/components/MeetingConversation.vue'
+import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 import { ConversationType } from '@/types'
 
 const conversationId = router.currentRoute.value.params.id
@@ -31,21 +32,22 @@ const conversationTitle = computed(() => {
       <p>Cannot find conversation</p>
     </template>
     <template v-else>
-      <div class="text-center pb-12">
-        <div class="badge badge-neutral">
+      <BreadcrumbNav>
+        <li>
           <RouterLink
             :to="{ name: 'channel', params: { id: koreroStore.currentConversation.channelId } }"
           >
             <span class="sr-only">Channel name: </span>
             {{ koreroStore.getChannel(koreroStore.currentConversation.channelId).name }}
           </RouterLink>
-        </div>
-        /
-        <div class="badge badge-neutral">
-          <span class="sr-only">Conversation title: </span> {{ conversationTitle }}
-        </div>
-        <div class="badge badge-secondary">{{ koreroStore.currentConversation.type }}</div>
-      </div>
+        </li>
+        <li>
+          <div class="flex gap-1">
+            <span class="sr-only">Conversation title: </span> {{ conversationTitle }}
+            <div class="badge">{{ koreroStore.currentConversation.type }}</div>
+          </div>
+        </li>
+      </BreadcrumbNav>
 
       <div class="grid gap-4">
         <AnnouncementConversation

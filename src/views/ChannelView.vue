@@ -4,12 +4,13 @@ import { useKoreroStore } from '@/stores/korero'
 import router from '@/router'
 import ClickableCard from '@/components/ClickableCard.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
+import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 
-const channelId = router.currentRoute.value.params.id
+const channelId = router.currentRoute.value.params.id as string
 
 const koreroStore = useKoreroStore()
 
-koreroStore.setChannel(channelId as string)
+koreroStore.setChannel(channelId)
 
 const channelName = computed(() => {
   if (koreroStore.currentChannel) {
@@ -30,15 +31,11 @@ function goToConversation(channelId: string) {
 </script>
 
 <template>
-  <div class="text-center pb-12">
-    <div class="badge badge-neutral">
-      <span class="sr-only">Channel name: </span>{{ channelName }}
-    </div>
-  </div>
+  <BreadcrumbNav />
 
   <div class="flex gap-4 justify-between items-center">
     <HeadingOne class="text-center">Conversations</HeadingOne>
-    <button @click="newConversation" class="btn btn-sm btn-primary">New conversation</button>
+    <button @click="newConversation" class="btn btn-sm btn-accent">New conversation</button>
   </div>
 
   <div class="py-4 grid grid-cols-3 gap-4">

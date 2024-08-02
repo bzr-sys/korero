@@ -7,6 +7,7 @@ import BaseCard from '@/components/BaseCard.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
 import BaseLegend from '@/components/BaseLegend.vue'
+import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 import { ConversationType, Agency } from '@/types'
 import type { Meeting, Poll, Brainstorm, Conversation } from '@/types'
 import { dateObjToDatetimeLocalFormat } from '@/date'
@@ -146,13 +147,14 @@ const dateMin = dateObjToDatetimeLocalFormat()
 
 <template>
   <div class="max-w-4xl mx-auto">
-    <div class="text-center pb-12">
-      <div class="badge badge-neutral">
+    <BreadcrumbNav>
+      <li>
         <RouterLink :to="{ name: 'channel', params: { id: channelId } }">
           <span class="sr-only">Channel name: </span>{{ channelName }}
         </RouterLink>
-      </div>
-    </div>
+      </li>
+      <li>New conversation</li>
+    </BreadcrumbNav>
 
     <HeadingOne class="pb-6">Create a new conversation</HeadingOne>
 
@@ -352,7 +354,7 @@ const dateMin = dateObjToDatetimeLocalFormat()
         </label>
       </div>
 
-      <button class="btn btn-primary mt-4">Create conversation</button>
+      <button class="btn btn-accent mt-4">Create conversation</button>
     </form>
   </div>
 </template>

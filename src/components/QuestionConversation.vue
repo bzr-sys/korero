@@ -54,7 +54,7 @@ const chosenAnswer = computed(() =>
     <ChatMessage :message="message" />
     <div v-if="question.answer == message.id" class="badge badge-success">Chosen Answer</div>
     <div v-else-if="!question.answer && question.authorId == koreroStore.user.id">
-      <button @click="markAnswer(message.id)" class="btn btn-sm btn-primary mt-4">
+      <button @click="markAnswer(message.id)" class="btn btn-sm btn-accent mt-4">
         Mark as answer
       </button>
     </div>

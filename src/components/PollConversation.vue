@@ -97,7 +97,7 @@ async function votePoll() {
       </fieldset>
 
       <div>
-        <button @click="votePoll()" class="btn btn-primary">Submit poll</button>
+        <button @click="votePoll()" class="btn btn-accent">Submit poll</button>
       </div>
     </template>
     <div v-else class="max-w-xs">

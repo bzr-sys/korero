@@ -72,7 +72,7 @@ const canWrite = computed(() => {
       ref="editor"
     />
     <div>
-      <button @click="postMessage" class="btn btn-primary mt-4">Post message</button>
+      <button @click="postMessage" class="btn btn-accent mt-4">Post message</button>
     </div>
   </template>
 </template>
