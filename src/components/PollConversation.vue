@@ -3,34 +3,18 @@ import { computed, ref } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
-import ToastUiEditor from '@/components/ToastUiEditor.vue'
 import FormatDateString from '@/components/FormatDateString.vue'
 import BaseLegend from './BaseLegend.vue'
 import HeadingTwo from './HeadingTwo.vue'
 import CircleCheckSVG from './CircleCheckSVG.vue'
 import CirclePlainSVG from './CirclePlainSVG.vue'
 import ChatMessage from './ChatMessage.vue'
-import { type Poll, MessageType } from '@/types'
+import MessageForm from '@/components/MessageForm.vue'
+import type { Poll } from '@/types'
 
 const koreroStore = useKoreroStore()
 // We know the conversation is a poll
 const poll = koreroStore.currentConversation as Poll
-
-const newMessage = ref('')
-const editor = ref<InstanceType<typeof ToastUiEditor> | null>(null)
-
-async function postMessage() {
-  if (!newMessage.value) {
-    return
-  }
-  await koreroStore.createMessage({
-    conversationId: poll.id,
-    type: MessageType.COMMENT,
-    text: newMessage.value
-  })
-  newMessage.value = ''
-  editor.value?.clearMarkdown()
-}
 
 const chosenOption = ref()
 const checkedOption = ref([] as boolean[])
@@ -127,16 +111,7 @@ async function votePoll() {
 
   <ChatMessage v-for="message in koreroStore.messages" :key="message.id" :message="message" />
 
-  <div>
-    <ToastUiEditor
-      @updateValue="(t) => (newMessage = t)"
-      label="Leave a comment"
-      height="auto"
-      initialEditType="markdown"
-      ref="editor"
-    />
-    <button @click="postMessage" class="btn mt-4">Comment</button>
-  </div>
+  <MessageForm />
 </template>
 
 <style></style>

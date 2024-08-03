@@ -133,7 +133,7 @@ export const useKoreroStore = defineStore('korero', () => {
       return
     }
     currentChannel.value = channels.value.find((c) => {
-      return c.id == id
+      return c.id === id
     })
 
     if (!currentChannel.value) {
@@ -200,7 +200,7 @@ export const useKoreroStore = defineStore('korero', () => {
     // It does not work, probably because currentConversation is not set when this returns
 
     currentConversation.value = conversations.value.find((c) => {
-      return c.id == id
+      return c.id === id
     })
 
     if (!currentConversation.value) {

@@ -1,32 +1,17 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
 import FormatDateString from '@/components/FormatDateString.vue'
 import HeadingTwo from './HeadingTwo.vue'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
-import ToastUiEditor from '@/components/ToastUiEditor.vue'
+import MessageForm from '@/components/MessageForm.vue'
 import ChatMessage from './ChatMessage.vue'
-import { MessageType, type Brainstorm } from '@/types'
+import { type Brainstorm } from '@/types'
 
 const koreroStore = useKoreroStore()
 // We know the conversation is a brainstorm
 const brainstorm = koreroStore.currentConversation as Brainstorm
-
-const newMessage = ref('')
-const editor = ref<InstanceType<typeof ToastUiEditor> | null>(null)
-async function postMessage() {
-  if (!newMessage.value) {
-    return
-  }
-  await koreroStore.createMessage({
-    conversationId: brainstorm.id,
-    type: MessageType.COMMENT,
-    text: newMessage.value
-  })
-  newMessage.value = ''
-  editor.value?.clearMarkdown()
-}
 
 const pastDue = computed(() => {
   if (new Date(brainstorm.due) < new Date()) {
@@ -63,18 +48,10 @@ const canWrite = computed(() => {
     <ToastUiViewer v-for="message in myMessages" :key="message.id" :initialValue="message.text" />
   </template>
 
-  <template v-if="canWrite">
-    <ToastUiEditor
-      @updateValue="(t) => (newMessage = t)"
-      :label="pastDue ? 'Add a comment' : 'Add your brainstorm suggestion'"
-      height="auto"
-      initialEditType="markdown"
-      ref="editor"
-    />
-    <div>
-      <button @click="postMessage" class="btn btn-accent mt-4">Post message</button>
-    </div>
-  </template>
+  <MessageForm
+    v-if="canWrite"
+    :label="pastDue ? 'Add a comment' : 'Add your brainstorm suggestion'"
+  />
 </template>
 
 <style></style>

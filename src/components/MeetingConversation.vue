@@ -8,29 +8,20 @@ import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
-import { Agency, MessageType, type AgendaItem, type Meeting } from '@/types'
+import MessageForm from '@/components/MessageForm.vue'
+import { Agency, type AgendaItem, type Meeting } from '@/types'
 
 const koreroStore = useKoreroStore()
 // We know the conversation is a meeting
 const meeting = koreroStore.currentConversation as Meeting
 
 const newMessage = ref('')
+const newMessageValidationError = ref('')
 const editor = ref<InstanceType<typeof ToastUiEditor> | null>(null)
-async function postMessage() {
-  if (!newMessage.value) {
-    return
-  }
-  await koreroStore.createMessage({
-    conversationId: meeting.id,
-    type: MessageType.COMMENT,
-    text: newMessage.value
-  })
-  newMessage.value = ''
-  editor.value?.clearMarkdown()
-}
 
 async function postMeetingNotes() {
   if (!newMessage.value) {
+    newMessageValidationError.value = 'A message is required'
     return
   }
   await koreroStore.updateConversation(meeting.id, {
@@ -42,9 +33,13 @@ async function postMeetingNotes() {
 
 const agendaItemTitle = ref('')
 const agendaItemText = ref('')
+const agendaItemValidationError = ref('')
 async function addAgendaItem() {
-  console.log('add')
-  if (!agendaItemTitle.value || !agendaItemText.value) {
+  if (!agendaItemTitle.value) {
+    return
+  }
+  if (!agendaItemText.value) {
+    agendaItemValidationError.value = 'A message is required'
     return
   }
   meeting.agenda.items.push({
@@ -137,63 +132,78 @@ const messagesAfterNotes = computed(() => {
 
   <HeadingTwo class="pt-8 text-center">Agenda</HeadingTwo>
 
-  <div v-if="meeting.agenda.decision == Agency.COLLAB && !agendaDue">
+  <div v-if="meeting.agenda.decision === Agency.COLLAB && !agendaDue">
     <!-- Still need to vote, so we show unordered agenda items -->
-    <div v-for="item in meeting.agenda.items" :key="item.index" class="border">
-      <p class="font-bold">{{ item.title }}</p>
+    <BaseCard v-for="item in meeting.agenda.items" :key="item.index" class="mb-4">
+      <div>{{ item.title }}</div>
       <ToastUiViewer :initialValue="item.text" />
 
-      <button
-        v-if="item.votes.includes(koreroStore.user.id)"
-        @click="unvoteAgendaItem(item.index)"
-        class="btn"
-      >
-        Remove my vote
-      </button>
-      <button v-else @click="voteAgendaItem(item.index)" class="btn">Vote for item</button>
-    </div>
+      <div>
+        <button
+          v-if="item.votes.includes(koreroStore.user.id)"
+          @click="unvoteAgendaItem(item.index)"
+          class="btn btn-sm btn-error mt-1"
+        >
+          Remove my vote
+        </button>
+        <button v-else @click="voteAgendaItem(item.index)" class="btn btn-sm btn-accent mt-1">
+          Vote for item
+        </button>
+      </div>
+    </BaseCard>
   </div>
   <div v-else class="grid gap-8 mb-8">
     <!-- Show ordered agenda items -->
     <!-- TODO hide or minimize agenda if meeting has passed -->
     <BaseCard v-for="item in sortedAgenda" :key="item.index">
       <div>{{ item.title }}</div>
-      <ToastUiViewer :initialValue="item.text" />
+      <ToastUiViewer v-if="item.text" :initialValue="item.text" />
       <div
         v-if="meeting.agenda.decision === Agency.OWNER && meeting.agenda.setting === Agency.COLLAB"
       >
-        <p v-if="item.approved">Approved</p>
+        <div v-if="item.approved" class="badge badge-success">Approved</div>
         <p v-else-if="meetingPast">Rejected (TODO: should probably hide agenda text)</p>
         <button
           v-else-if="meeting.authorId === koreroStore.user.id"
           @click="approveAgendaItem(item.index)"
-          class="btn"
+          class="btn btn-sm btn-accent mt-1"
         >
           Approve
         </button>
         <p v-else>Pending</p>
       </div>
       <div v-else-if="meeting.agenda.decision === Agency.COLLAB">
-        <p>Votes: {{ item.votes.length }}</p>
+        <div class="badge badge-neutral">Votes {{ item.votes.length }}</div>
       </div>
     </BaseCard>
   </div>
 
   <!-- Propose new agenda items -->
-  <div v-if="meeting.agenda.setting == Agency.COLLAB && !agendaDue">
-    <p>Agenda items can be proposed until {{ meeting.agenda.due }}</p>
-    <div>
-      <span>Propose item with title</span>
-      <input type="text" v-model="agendaItemTitle" class="border" />
+  <div v-if="meeting.agenda.setting === Agency.COLLAB && !agendaDue">
+    <div class="text-center pb-8">
+      <div>Agenda items proposal due date</div>
+      <FormatDateString :dateString="meeting.agenda.due" />
+    </div>
+
+    <BaseCard>
+      <div>Propose agenda item</div>
+      <label class="form-control mb-8">
+        <div class="label">
+          <span class="label-text">Title</span>
+        </div>
+        <input v-model="agendaItemTitle" type="text" class="input input-bordered" required />
+      </label>
       <ToastUiEditor
         @updateValue="(t) => (agendaItemText = t)"
         label="Agenda item text"
         height="auto"
         initialEditType="markdown"
         ref="editor"
+        :validationError="agendaItemValidationError"
       />
-    </div>
-    <button @click="addAgendaItem()" class="btn btn-sm">Add Agenda Item</button>
+    </BaseCard>
+
+    <button @click="addAgendaItem()" class="btn mt-4">Add Agenda Item</button>
   </div>
 
   <!-- Agenda is set, move on to comments and notes -->
@@ -222,22 +232,13 @@ const messagesAfterNotes = computed(() => {
         @updateValue="(t) => (newMessage = t)"
         label="Add meeting notes"
         height="auto"
+        :validationError="newMessageValidationError"
         initialEditType="markdown"
         ref="editor"
       />
       <button @click="postMeetingNotes" class="btn btn-accent mt-4">Post Meeting Notes</button>
     </div>
-
-    <div v-else>
-      <ToastUiEditor
-        @updateValue="(t) => (newMessage = t)"
-        label="Write a comment"
-        height="auto"
-        initialEditType="markdown"
-        ref="editor"
-      />
-      <button @click="postMessage" class="btn btn-accent mt-4">Comment</button>
-    </div>
+    <MessageForm v-else />
   </div>
 </template>
 

@@ -20,7 +20,7 @@ koreroStore.setChannel(channelId as string)
 
 const currentChannel = computed(() => {
   return koreroStore.channels.find((c) => {
-    return c.id == channelId
+    return c.id === channelId
   })
 })
 
@@ -32,8 +32,11 @@ const channelName = computed(() => {
 })
 
 async function createConversation() {
-  // console.log('createConversation')
-  if (!message.value || !title.value) {
+  if (!title.value) {
+    return
+  }
+  if (!message.value) {
+    messageValidationError.value = 'A message is required'
     return
   }
   //
@@ -141,6 +144,7 @@ const agendaDecision = ref(Agency.OWNER)
 const agendaItems = ref([{ ...emptyAgendaItem }])
 const due = ref('')
 const date = ref('')
+const messageValidationError = ref('')
 
 const dateMin = dateObjToDatetimeLocalFormat()
 </script>
@@ -184,6 +188,7 @@ const dateMin = dateObjToDatetimeLocalFormat()
           :label="messageDescription"
           height="auto"
           initialEditType="markdown"
+          :validationError="messageValidationError"
           class="mb-8"
         />
 
@@ -226,7 +231,7 @@ const dateMin = dateObjToDatetimeLocalFormat()
             </div>
           </fieldset>
 
-          <div v-if="agendaSetting == Agency.COLLAB">
+          <div v-if="agendaSetting === Agency.COLLAB">
             <label class="form-control mb-8">
               <div class="label">
                 <span class="label-text">Agenda Item Proposal Due Date</span>
@@ -286,6 +291,7 @@ const dateMin = dateObjToDatetimeLocalFormat()
                 <input v-model="item.title" type="text" class="input input-bordered" required />
               </label>
 
+              <!-- Description is optional -->
               <ToastUiEditor
                 @updateValue="(t) => (item.text = t)"
                 label="Description"
