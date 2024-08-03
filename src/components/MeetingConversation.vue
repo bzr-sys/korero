@@ -9,6 +9,7 @@ import ToastUiEditor from '@/components/ToastUiEditor.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import MessageForm from '@/components/MessageForm.vue'
+import TextInput from '@/components/TextInput.vue'
 import { Agency, type AgendaItem, type Meeting } from '@/types'
 
 const koreroStore = useKoreroStore()
@@ -33,13 +34,8 @@ async function postMeetingNotes() {
 
 const agendaItemTitle = ref('')
 const agendaItemText = ref('')
-const agendaItemValidationError = ref('')
 async function addAgendaItem() {
   if (!agendaItemTitle.value) {
-    return
-  }
-  if (!agendaItemText.value) {
-    agendaItemValidationError.value = 'A message is required'
     return
   }
   meeting.agenda.items.push({
@@ -136,7 +132,7 @@ const messagesAfterNotes = computed(() => {
     <!-- Still need to vote, so we show unordered agenda items -->
     <BaseCard v-for="item in meeting.agenda.items" :key="item.index" class="mb-4">
       <div>{{ item.title }}</div>
-      <ToastUiViewer :initialValue="item.text" />
+      <ToastUiViewer v-if="item.text" initialValue="item.text" />
 
       <div>
         <button
@@ -185,25 +181,21 @@ const messagesAfterNotes = computed(() => {
       <FormatDateString :dateString="meeting.agenda.due" />
     </div>
 
-    <BaseCard>
-      <div>Propose agenda item</div>
-      <label class="form-control mb-8">
-        <div class="label">
-          <span class="label-text">Title</span>
-        </div>
-        <input v-model="agendaItemTitle" type="text" class="input input-bordered" required />
-      </label>
-      <ToastUiEditor
-        @updateValue="(t) => (agendaItemText = t)"
-        label="Agenda item text"
-        height="auto"
-        initialEditType="markdown"
-        ref="editor"
-        :validationError="agendaItemValidationError"
-      />
-    </BaseCard>
-
-    <button @click="addAgendaItem()" class="btn mt-4">Add Agenda Item</button>
+    <form @submit.prevent="addAgendaItem">
+      <BaseCard>
+        <div>Propose agenda item</div>
+        <TextInput label="Title" v-model="agendaItemTitle" />
+        <!-- Description is optional -->
+        <ToastUiEditor
+          @updateValue="(t) => (agendaItemText = t)"
+          label="Agenda item text"
+          height="auto"
+          initialEditType="markdown"
+          ref="editor"
+        />
+      </BaseCard>
+      <button type="submit" class="btn mt-4">Add agenda item</button>
+    </form>
   </div>
 
   <!-- Agenda is set, move on to comments and notes -->
