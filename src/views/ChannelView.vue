@@ -41,13 +41,12 @@ function goToConversation(channelId: string) {
   <div class="py-4 grid grid-cols-3 gap-4">
     <ClickableCard
       v-for="conversation in koreroStore.conversations"
+      class="relative"
       :key="conversation.id"
       @click="goToConversation(conversation.id)"
     >
-      <div class="flex gap-4 justify-between items-center">
-        <div>{{ conversation.title }}</div>
-        <div class="badge badge-secondary">{{ conversation.type }}</div>
-      </div>
+      <div class="badge absolute top-0 right-0">{{ conversation.type }}</div>
+      <h2 class="card-title">{{ conversation.title }}</h2>
     </ClickableCard>
   </div>
 </template>

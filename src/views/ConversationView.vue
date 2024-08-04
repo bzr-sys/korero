@@ -11,6 +11,7 @@ import PollConversation from '@/components/PollConversation.vue'
 import MeetingConversation from '@/components/MeetingConversation.vue'
 import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 import { ConversationType } from '@/types'
+import HeadingOne from '@/components/HeadingOne.vue'
 
 const conversationId = router.currentRoute.value.params.id
 
@@ -42,12 +43,11 @@ const conversationTitle = computed(() => {
           </RouterLink>
         </li>
         <li>
-          <div class="flex gap-1">
-            <span class="sr-only">Conversation title: </span> {{ conversationTitle }}
-            <div class="badge">{{ koreroStore.currentConversation.type }}</div>
-          </div>
+          <div class="badge">{{ koreroStore.currentConversation.type }}</div>
         </li>
       </BreadcrumbNav>
+
+      <HeadingOne class="text-center pb-8">{{ conversationTitle }}</HeadingOne>
 
       <div class="grid gap-4">
         <AnnouncementConversation
