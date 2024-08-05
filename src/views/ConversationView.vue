@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
 import router from '@/router'
@@ -9,7 +9,9 @@ import BrainstormConversation from '@/components/BrainstormConversation.vue'
 import QuestionConversation from '@/components/QuestionConversation.vue'
 import PollConversation from '@/components/PollConversation.vue'
 import MeetingConversation from '@/components/MeetingConversation.vue'
+import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 import { ConversationType } from '@/types'
+import HeadingOne from '@/components/HeadingOne.vue'
 
 const conversationId = router.currentRoute.value.params.id
 
@@ -31,21 +33,21 @@ const conversationTitle = computed(() => {
       <p>Cannot find conversation</p>
     </template>
     <template v-else>
-      <div class="text-center pb-12">
-        <div class="badge badge-neutral">
+      <BreadcrumbNav>
+        <li>
           <RouterLink
             :to="{ name: 'channel', params: { id: koreroStore.currentConversation.channelId } }"
           >
             <span class="sr-only">Channel name: </span>
             {{ koreroStore.getChannel(koreroStore.currentConversation.channelId).name }}
           </RouterLink>
-        </div>
-        /
-        <div class="badge badge-neutral">
-          <span class="sr-only">Conversation title: </span> {{ conversationTitle }}
-        </div>
-        <div class="badge badge-secondary">{{ koreroStore.currentConversation.type }}</div>
-      </div>
+        </li>
+        <li>
+          <div class="badge">{{ koreroStore.currentConversation.type }}</div>
+        </li>
+      </BreadcrumbNav>
+
+      <HeadingOne class="text-center pb-8">{{ conversationTitle }}</HeadingOne>
 
       <div class="grid gap-4">
         <AnnouncementConversation

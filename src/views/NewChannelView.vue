@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import HeadingOne from '@/components/HeadingOne.vue'
+import TextInput from '@/components/TextInput.vue'
 import { useKoreroStore } from '@/stores/korero'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -31,14 +32,8 @@ async function createChannel() {
     <HeadingOne>Create a new channel</HeadingOne>
 
     <form @submit.prevent="createChannel">
-      <label class="form-control">
-        <div class="label">
-          <span class="label-text">Channel name</span>
-        </div>
-        <input v-model="channelName" type="text" class="input input-bordered mb-4" required />
-      </label>
-
-      <button class="btn btn-primary">Create channel</button>
+      <TextInput label="Channel name" v-model="channelName" />
+      <button class="btn btn-accent">Create channel</button>
     </form>
   </div>
 </template>

@@ -89,7 +89,7 @@ export const useKoreroStore = defineStore('korero', () => {
   type Channel = Doc & {
     name: string
   }
-  const channels = ref([] as Channel[])
+  const channels = ref<Channel[]>([])
   let unsubscribeChannels: (() => Promise<BazaarMessage>) | undefined = undefined
   // let channelCollection = undefined;
   async function syncChannels() {
@@ -124,8 +124,8 @@ export const useKoreroStore = defineStore('korero', () => {
   // Load and manage conversations in a channel
   //
 
-  const currentChannel = ref(undefined as Channel | undefined)
-  const conversations = ref([] as Conversation[])
+  const currentChannel = ref<Channel | undefined>(undefined)
+  const conversations = ref<Conversation[]>([])
   let unsubscribeConversations: (() => Promise<BazaarMessage>) | undefined = undefined
 
   async function setChannel(id: string) {
@@ -133,7 +133,7 @@ export const useKoreroStore = defineStore('korero', () => {
       return
     }
     currentChannel.value = channels.value.find((c) => {
-      return c.id == id
+      return c.id === id
     })
 
     if (!currentChannel.value) {
@@ -146,6 +146,9 @@ export const useKoreroStore = defineStore('korero', () => {
       unsubscribeConversations()
       unsubscribeConversations = undefined
     }
+
+    // Remove conversations before mirroring
+    conversations.value = []
 
     // TODO how to make sure only members of this channel can read these conversations?
     unsubscribeConversations = await bzr
@@ -197,7 +200,7 @@ export const useKoreroStore = defineStore('korero', () => {
     // It does not work, probably because currentConversation is not set when this returns
 
     currentConversation.value = conversations.value.find((c) => {
-      return c.id == id
+      return c.id === id
     })
 
     if (!currentConversation.value) {

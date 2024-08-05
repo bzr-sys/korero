@@ -8,29 +8,21 @@ import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
-import { Agency, MessageType, type AgendaItem, type Meeting } from '@/types'
+import MessageForm from '@/components/MessageForm.vue'
+import TextInput from '@/components/TextInput.vue'
+import { Agency, type AgendaItem, type Meeting } from '@/types'
 
 const koreroStore = useKoreroStore()
 // We know the conversation is a meeting
 const meeting = koreroStore.currentConversation as Meeting
 
 const newMessage = ref('')
+const newMessageValidationError = ref('')
 const editor = ref<InstanceType<typeof ToastUiEditor> | null>(null)
-async function postMessage() {
-  if (!newMessage.value) {
-    return
-  }
-  await koreroStore.createMessage({
-    conversationId: meeting.id,
-    type: MessageType.COMMENT,
-    text: newMessage.value
-  })
-  newMessage.value = ''
-  editor.value?.clearMarkdown()
-}
 
 async function postMeetingNotes() {
   if (!newMessage.value) {
+    newMessageValidationError.value = 'A message is required'
     return
   }
   await koreroStore.updateConversation(meeting.id, {
@@ -43,8 +35,7 @@ async function postMeetingNotes() {
 const agendaItemTitle = ref('')
 const agendaItemText = ref('')
 async function addAgendaItem() {
-  console.log('add')
-  if (!agendaItemTitle.value || !agendaItemText.value) {
+  if (!agendaItemTitle.value) {
     return
   }
   meeting.agenda.items.push({
@@ -137,67 +128,78 @@ const messagesAfterNotes = computed(() => {
 
   <HeadingTwo class="pt-8 text-center">Agenda</HeadingTwo>
 
-  <div v-if="meeting.agenda.decision == Agency.COLLAB && !agendaDue">
+  <div v-if="meeting.agenda.decision === Agency.COLLAB && !agendaDue">
     <!-- Still need to vote, so we show unordered agenda items -->
-    <div v-for="item in meeting.agenda.items" :key="item.index" class="border">
-      <p class="font-bold">{{ item.title }}</p>
-      <ToastUiViewer :initialValue="item.text" />
+    <BaseCard v-for="item in meeting.agenda.items" :key="item.index" class="mb-4">
+      <div>{{ item.title }}</div>
+      <ToastUiViewer v-if="item.text" initialValue="item.text" />
 
-      <button
-        v-if="item.votes.includes(koreroStore.user.id)"
-        @click="unvoteAgendaItem(item.index)"
-        class="btn"
-      >
-        Remove my vote
-      </button>
-      <button v-else @click="voteAgendaItem(item.index)" class="btn">Vote for item</button>
-    </div>
+      <div>
+        <button
+          v-if="item.votes.includes(koreroStore.user.id)"
+          @click="unvoteAgendaItem(item.index)"
+          class="btn btn-sm btn-error mt-1"
+        >
+          Remove my vote
+        </button>
+        <button v-else @click="voteAgendaItem(item.index)" class="btn btn-sm btn-accent mt-1">
+          Vote for item
+        </button>
+      </div>
+    </BaseCard>
   </div>
   <div v-else class="grid gap-8 mb-8">
     <!-- Show ordered agenda items -->
     <!-- TODO hide or minimize agenda if meeting has passed -->
     <BaseCard v-for="item in sortedAgenda" :key="item.index">
       <div>{{ item.title }}</div>
-      <ToastUiViewer :initialValue="item.text" />
+      <ToastUiViewer v-if="item.text" :initialValue="item.text" />
       <div
         v-if="meeting.agenda.decision === Agency.OWNER && meeting.agenda.setting === Agency.COLLAB"
       >
-        <p v-if="item.approved">Approved</p>
+        <div v-if="item.approved" class="badge badge-success">Approved</div>
         <p v-else-if="meetingPast">Rejected (TODO: should probably hide agenda text)</p>
         <button
           v-else-if="meeting.authorId === koreroStore.user.id"
           @click="approveAgendaItem(item.index)"
-          class="btn"
+          class="btn btn-sm btn-accent mt-1"
         >
           Approve
         </button>
         <p v-else>Pending</p>
       </div>
       <div v-else-if="meeting.agenda.decision === Agency.COLLAB">
-        <p>Votes: {{ item.votes.length }}</p>
+        <div class="badge badge-neutral">Votes {{ item.votes.length }}</div>
       </div>
     </BaseCard>
   </div>
 
   <!-- Propose new agenda items -->
-  <div v-if="meeting.agenda.setting == Agency.COLLAB && !agendaDue">
-    <p>Agenda items can be proposed until {{ meeting.agenda.due }}</p>
-    <div>
-      <span>Propose item with title</span>
-      <input type="text" v-model="agendaItemTitle" class="border" />
-      <ToastUiEditor
-        @updateValue="(t) => (agendaItemText = t)"
-        label="Agenda item text"
-        height="auto"
-        initialEditType="markdown"
-        ref="editor"
-      />
+  <template v-if="meeting.agenda.setting === Agency.COLLAB && !agendaDue">
+    <div class="text-center pb-8">
+      <div>Agenda items proposal due date</div>
+      <FormatDateString :dateString="meeting.agenda.due" />
     </div>
-    <button @click="addAgendaItem()" class="btn btn-sm">Add Agenda Item</button>
-  </div>
+
+    <form @submit.prevent="addAgendaItem">
+      <BaseCard>
+        <div>Propose agenda item</div>
+        <TextInput label="Title" v-model="agendaItemTitle" />
+        <!-- Description is optional -->
+        <ToastUiEditor
+          @updateValue="(t) => (agendaItemText = t)"
+          label="Agenda item text"
+          height="auto"
+          initialEditType="markdown"
+          ref="editor"
+        />
+      </BaseCard>
+      <button type="submit" class="btn mt-4">Add agenda item</button>
+    </form>
+  </template>
 
   <!-- Agenda is set, move on to comments and notes -->
-  <div v-else>
+  <template v-else>
     <!-- Show comment from before the meeting-->
     <!-- TODO minimize messages when we have notes -->
     <HeadingTwo v-if="messagesBeforeNotes.length" class="pt-8 text-center"
@@ -222,23 +224,14 @@ const messagesAfterNotes = computed(() => {
         @updateValue="(t) => (newMessage = t)"
         label="Add meeting notes"
         height="auto"
+        :validationError="newMessageValidationError"
         initialEditType="markdown"
         ref="editor"
       />
-      <button @click="postMeetingNotes" class="btn btn-primary mt-4">Post Meeting Notes</button>
+      <button @click="postMeetingNotes" class="btn btn-accent mt-4">Post Meeting Notes</button>
     </div>
-
-    <div v-else>
-      <ToastUiEditor
-        @updateValue="(t) => (newMessage = t)"
-        label="Write a comment"
-        height="auto"
-        initialEditType="markdown"
-        ref="editor"
-      />
-      <button @click="postMessage" class="btn btn-primary mt-4">Comment</button>
-    </div>
-  </div>
+    <MessageForm v-else />
+  </template>
 </template>
 
 <style></style>

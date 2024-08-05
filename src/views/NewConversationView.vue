@@ -7,6 +7,9 @@ import BaseCard from '@/components/BaseCard.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
 import BaseLegend from '@/components/BaseLegend.vue'
+import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
+import TextInput from '@/components/TextInput.vue'
+import DateInput from '@/components/DateInput.vue'
 import { ConversationType, Agency } from '@/types'
 import type { Meeting, Poll, Brainstorm, Conversation } from '@/types'
 import { dateObjToDatetimeLocalFormat } from '@/date'
@@ -19,7 +22,7 @@ koreroStore.setChannel(channelId as string)
 
 const currentChannel = computed(() => {
   return koreroStore.channels.find((c) => {
-    return c.id == channelId
+    return c.id === channelId
   })
 })
 
@@ -31,8 +34,11 @@ const channelName = computed(() => {
 })
 
 async function createConversation() {
-  // console.log('createConversation')
-  if (!message.value || !title.value) {
+  if (!title.value) {
+    return
+  }
+  if (!message.value) {
+    messageValidationError.value = 'A message is required'
     return
   }
   //
@@ -109,7 +115,7 @@ for (const t of Object.values(ConversationType)) {
   conversationTypes.value.push({ id: t, value: t.charAt(0).toUpperCase() + t.slice(1) })
 }
 
-const chosenType = ref(ConversationType.POLL)
+const chosenType = ref(ConversationType.DISCUSSION)
 const messageDescription = computed(() => {
   switch (chosenType.value) {
     case ConversationType.MEETING:
@@ -140,19 +146,21 @@ const agendaDecision = ref(Agency.OWNER)
 const agendaItems = ref([{ ...emptyAgendaItem }])
 const due = ref('')
 const date = ref('')
+const messageValidationError = ref('')
 
 const dateMin = dateObjToDatetimeLocalFormat()
 </script>
 
 <template>
   <div class="max-w-4xl mx-auto">
-    <div class="text-center pb-12">
-      <div class="badge badge-neutral">
+    <BreadcrumbNav>
+      <li>
         <RouterLink :to="{ name: 'channel', params: { id: channelId } }">
           <span class="sr-only">Channel name: </span>{{ channelName }}
         </RouterLink>
-      </div>
-    </div>
+      </li>
+      <li>New conversation</li>
+    </BreadcrumbNav>
 
     <HeadingOne class="pb-6">Create a new conversation</HeadingOne>
 
@@ -169,12 +177,7 @@ const dateMin = dateObjToDatetimeLocalFormat()
         </div>
       </fieldset>
 
-      <label class="form-control mb-8">
-        <div class="label">
-          <span class="label-text">Title</span>
-        </div>
-        <input v-model="title" type="text" class="input input-bordered" required />
-      </label>
+      <TextInput label="Title" v-model="title" />
 
       <div>
         <ToastUiEditor
@@ -182,24 +185,14 @@ const dateMin = dateObjToDatetimeLocalFormat()
           :label="messageDescription"
           height="auto"
           initialEditType="markdown"
+          :validationError="messageValidationError"
           class="mb-8"
         />
 
         <!-- MEETING -->
 
         <div v-if="chosenType === ConversationType.MEETING">
-          <label class="form-control mb-8">
-            <div class="label">
-              <span class="label-text">Date</span>
-            </div>
-            <input
-              type="datetime-local"
-              v-model="date"
-              class="input input-bordered"
-              :min="dateMin"
-              required
-            />
-          </label>
+          <DateInput label="Date" v-model="date" />
 
           <fieldset>
             <BaseLegend>Agenda settings</BaseLegend>
@@ -224,19 +217,8 @@ const dateMin = dateObjToDatetimeLocalFormat()
             </div>
           </fieldset>
 
-          <div v-if="agendaSetting == Agency.COLLAB">
-            <label class="form-control mb-8">
-              <div class="label">
-                <span class="label-text">Agenda Item Proposal Due Date</span>
-              </div>
-              <input
-                type="datetime-local"
-                v-model="due"
-                class="input input-bordered"
-                :min="dateMin"
-                required
-              />
-            </label>
+          <div v-if="agendaSetting === Agency.COLLAB">
+            <DateInput label="Agenda Item Proposal Due Date" v-model="due" />
 
             <fieldset>
               <legend class="sr-only">Agenda Proposed Items Decision Process</legend>
@@ -277,13 +259,9 @@ const dateMin = dateObjToDatetimeLocalFormat()
             <BaseCard v-for="(item, index) in agendaItems" :key="index" class="mb-4">
               <div>Agenda item {{ index + 1 }}</div>
 
-              <label class="form-control mb-8">
-                <div class="label">
-                  <span class="label-text">Title</span>
-                </div>
-                <input v-model="item.title" type="text" class="input input-bordered" required />
-              </label>
+              <TextInput label="Title" v-model="item.title" />
 
+              <!-- Description is optional -->
               <ToastUiEditor
                 @updateValue="(t) => (item.text = t)"
                 label="Description"
@@ -297,35 +275,20 @@ const dateMin = dateObjToDatetimeLocalFormat()
         <!-- POLL -->
 
         <div v-else-if="chosenType === ConversationType.POLL">
-          <label class="form-control mb-8">
-            <div class="label">
-              <span class="label-text">Due</span>
-            </div>
-            <input
-              type="datetime-local"
-              v-model="due"
-              class="input input-bordered"
-              :min="dateMin"
-              required
-            />
-          </label>
+          <DateInput label="Due" v-model="due" />
 
           <fieldset class="mb-4">
             <BaseLegend>Poll options</BaseLegend>
 
             <button class="btn btn-sm mb-4" type="button" @click="addPollOption">Add option</button>
 
-            <label v-for="(option, index) in pollOptions" :key="index" class="form-control mb-4">
-              <div class="label">
-                <span class="label-text sr-only">Option {{ index + 1 }}</span>
-              </div>
-              <input
-                v-model="pollOptions[index]"
-                type="text"
-                class="input input-bordered"
-                required
-              />
-            </label>
+            <TextInput
+              v-for="(option, index) in pollOptions"
+              :key="index"
+              :label="`Option ${index + 1}`"
+              v-model="pollOptions[index]"
+              :srOnlyLabel="true"
+            />
           </fieldset>
 
           <div class="form-control max-w-xs mb-8">
@@ -338,21 +301,14 @@ const dateMin = dateObjToDatetimeLocalFormat()
 
         <!-- BRAINSTORM -->
 
-        <label v-else-if="chosenType === ConversationType.BRAINSTORM" class="form-control mb-8">
-          <div class="label">
-            <span class="label-text">Due</span>
-          </div>
-          <input
-            type="datetime-local"
-            v-model="due"
-            class="input input-bordered"
-            :min="dateMin"
-            required
-          />
-        </label>
+        <DateInput
+          v-else-if="chosenType === ConversationType.BRAINSTORM"
+          label="Due"
+          v-model="due"
+        />
       </div>
 
-      <button class="btn btn-primary mt-4">Create conversation</button>
+      <button class="btn btn-accent mt-4">Create conversation</button>
     </form>
   </div>
 </template>
