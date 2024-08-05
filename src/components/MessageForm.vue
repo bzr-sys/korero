@@ -40,17 +40,16 @@ async function postMessage() {
 </script>
 
 <template>
-  <div class="pt-8">
-    <ToastUiEditor
-      @updateValue="(t) => (message = t)"
-      :label="props.label"
-      height="auto"
-      initialEditType="markdown"
-      ref="editor"
-      :validationError="validationError"
-    />
-    <button @click="postMessage" class="btn mt-4">Comment</button>
-  </div>
+  <ToastUiEditor
+    class="pt-8"
+    @updateValue="(t) => (message = t)"
+    :label="props.label"
+    height="auto"
+    initialEditType="markdown"
+    ref="editor"
+    :validationError="validationError"
+  />
+  <button @click="postMessage" class="btn mt-4 justify-self-start">Comment</button>
 </template>
 
 <style scoped></style>

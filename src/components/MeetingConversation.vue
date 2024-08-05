@@ -175,7 +175,7 @@ const messagesAfterNotes = computed(() => {
   </div>
 
   <!-- Propose new agenda items -->
-  <div v-if="meeting.agenda.setting === Agency.COLLAB && !agendaDue">
+  <template v-if="meeting.agenda.setting === Agency.COLLAB && !agendaDue">
     <div class="text-center pb-8">
       <div>Agenda items proposal due date</div>
       <FormatDateString :dateString="meeting.agenda.due" />
@@ -196,10 +196,10 @@ const messagesAfterNotes = computed(() => {
       </BaseCard>
       <button type="submit" class="btn mt-4">Add agenda item</button>
     </form>
-  </div>
+  </template>
 
   <!-- Agenda is set, move on to comments and notes -->
-  <div v-else>
+  <template v-else>
     <!-- Show comment from before the meeting-->
     <!-- TODO minimize messages when we have notes -->
     <HeadingTwo v-if="messagesBeforeNotes.length" class="pt-8 text-center"
@@ -231,7 +231,7 @@ const messagesAfterNotes = computed(() => {
       <button @click="postMeetingNotes" class="btn btn-accent mt-4">Post Meeting Notes</button>
     </div>
     <MessageForm v-else />
-  </div>
+  </template>
 </template>
 
 <style></style>
