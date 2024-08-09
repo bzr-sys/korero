@@ -13,11 +13,11 @@ const koreroStore = useKoreroStore()
 
 <template>
   <div>
-    <div :class="koreroStore.user.id === message.authorId && 'text-right'">
-      {{ koreroStore.getUser(message.authorId).name }}
-      <span v-if="koreroStore.user.id === message.authorId">(me)</span>
-      <time class="text-xs opacity-50"><FormatDateString :dateString="message.created" /></time>
+    <div class="italic text-xs" :class="koreroStore.user.id === message.authorId && 'text-right'">
+      By {{ koreroStore.getUser(message.authorId).name }} on
+      <FormatDateString :dateString="message.created" :defaultCss="false" />
     </div>
+
     <ToastUiViewer :initialValue="message.text" />
   </div>
 </template>

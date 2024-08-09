@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-
 import { useKoreroStore } from '@/stores/korero'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import FormatDateString from '@/components/FormatDateString.vue'
@@ -10,19 +9,25 @@ import CircleCheckSVG from './CircleCheckSVG.vue'
 import CirclePlainSVG from './CirclePlainSVG.vue'
 import ChatMessage from './ChatMessage.vue'
 import MessageForm from '@/components/MessageForm.vue'
+import ValidationError from './ValidationError.vue'
+import { getPluralEnding } from '@/utils/getPluralEnding'
 import type { Poll } from '@/types'
+import { storeToRefs } from 'pinia'
 
 const koreroStore = useKoreroStore()
+const { currentConversation, messages, user } = storeToRefs(koreroStore)
+
 // We know the conversation is a poll
-const poll = koreroStore.currentConversation as Poll
+const poll = computed(() => currentConversation.value as Poll)
 
 const chosenOption = ref()
 const checkedOption = ref([] as boolean[])
-checkedOption.value = poll.items.map(() => false)
+const optionValidationError = ref('')
+checkedOption.value = poll.value.items.map(() => false)
 const canVote = computed(() => {
-  for (const item of poll.items) {
+  for (const item of poll.value.items) {
     for (const vote of item.votes) {
-      if (vote === koreroStore.user.id) {
+      if (vote === user.value.id) {
         return false
       }
     }
@@ -30,25 +35,31 @@ const canVote = computed(() => {
   return true
 })
 async function votePoll() {
+  optionValidationError.value = ''
+
   if (!canVote.value) {
+    optionValidationError.value = 'You cannot vote.'
     return
   }
-  if (!chosenOption.value && checkedOption.value.every((c) => !c)) {
+  if (!chosenOption.value && chosenOption.value !== 0 && checkedOption.value.every((c) => !c)) {
+    optionValidationError.value = poll.value.multipleAnswers
+      ? 'Choose at least one option'
+      : 'Choose an option'
     return
   }
-  for (let i in poll.items) {
-    if (poll.items[i].index === chosenOption.value || checkedOption.value[i]) {
-      poll.items[i].votes.push(koreroStore.user.id)
+  for (let i in poll.value.items) {
+    if (poll.value.items[i].index === chosenOption.value || checkedOption.value[i]) {
+      poll.value.items[i].votes.push(user.value.id)
     }
   }
-  await koreroStore.updateConversation(poll.id, {
-    items: poll.items
+  await koreroStore.updateConversation(poll.value.id, {
+    items: poll.value.items
   })
 }
 </script>
 
 <template>
-  <FormatDateString class="text-center" :dateString="poll.due" />
+  <FormatDateString :dateString="poll.due" />
 
   <ToastUiViewer :initialValue="poll.message" class="mb-4" />
 
@@ -56,6 +67,7 @@ async function votePoll() {
   <template v-if="new Date(poll.due) > new Date()">
     <template v-if="canVote">
       <fieldset v-if="!poll.multipleAnswers" class="max-w-xs">
+        <ValidationError>{{ optionValidationError }}</ValidationError>
         <BaseLegend>Select one</BaseLegend>
 
         <div v-for="option in poll.items" :key="option.index" class="form-control">
@@ -90,7 +102,7 @@ async function votePoll() {
       <div class="form-control" v-for="option in poll.items" :key="option.index">
         <label class="label">
           <span class="label-text">{{ option.text }}</span>
-          <CircleCheckSVG v-if="option.votes.includes(koreroStore.user.id)" />
+          <CircleCheckSVG v-if="option.votes.includes(user.id)" />
           <CirclePlainSVG v-else />
         </label>
       </div>
@@ -107,9 +119,9 @@ async function votePoll() {
     </div>
   </div>
 
-  <HeadingTwo class="pt-8 text-center">Comments</HeadingTwo>
+  <HeadingTwo class="pt-4">{{ messages.length }} Comment{{ getPluralEnding(messages) }}</HeadingTwo>
 
-  <ChatMessage v-for="message in koreroStore.messages" :key="message.id" :message="message" />
+  <ChatMessage v-for="message in messages" :key="message.id" :message="message" />
 
   <MessageForm />
 </template>

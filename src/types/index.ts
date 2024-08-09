@@ -1,4 +1,4 @@
-import type { Doc, User } from '@bzr/bazaar'
+import type { Doc } from '@bzr/bazaar'
 
 export type Config = Doc & {
   currentTeam: string
@@ -15,9 +15,16 @@ export type Channel = Doc & {
 
 /**
  * String to be used for dates managed by the datetime-local input.
- * The format is "YYYY-MM-DDTHH:mm" which is the result of Date.prototype.toISOString().slice(0, 16).
+ * The format is "YYYY-MM-DDTHH:mm" which is format returned by the datetime-local input
+ * and the result of `Date.prototype.toISOString().slice(0, 16)`
  */
 export type DatetimeLocalInputString = string
+
+/**
+ * String to be used working with dates consistently
+ * Date time string format is "YYYY-MM-DDTHH:mm:ss.sssZ"
+ */
+export type ISODate = string
 
 export type ConversationCommon = Doc & {
   channelId: string
@@ -45,42 +52,47 @@ export enum ConversationType {
   BRAINSTORM = 'brainstorm'
 }
 
-export type Discussion = ConversationCommon & {
+export interface Discussion extends ConversationCommon {
   type: ConversationType.DISCUSSION
 }
-export type Meeting = ConversationCommon & {
+export interface Meeting extends ConversationCommon {
   type: ConversationType.MEETING
   date: DatetimeLocalInputString
   agenda: Agenda
   notes?: string
-  // TODO add "interactive" features such as intention setting
 }
-export type Question = ConversationCommon & {
+export interface Question extends ConversationCommon {
   type: ConversationType.QUESTION
-  answer?: string // message ID
+  /** Message ID of the selected answer */
+  answerId?: string
 }
-export type Announcement = ConversationCommon & {
+export interface Announcement extends ConversationCommon {
   type: ConversationType.ANNOUNCEMENT
 }
-export type Poll = ConversationCommon & {
+export interface Poll extends ConversationCommon {
   type: ConversationType.POLL
   multipleAnswers: boolean
   items: PollItem[]
   due: DatetimeLocalInputString
 }
-export type Brainstorm = ConversationCommon & {
+export interface Brainstorm extends ConversationCommon {
   type: ConversationType.BRAINSTORM
   due: DatetimeLocalInputString
 }
 
-export type Agenda = {
-  setting: Agency
+export type OwnerAgenda = {
+  setting: Agency.OWNER
+  text: string
+}
+export type CollabAgenda = {
+  setting: Agency.COLLAB
   decision: Agency
   items: AgendaItem[]
   due: DatetimeLocalInputString
 }
+export type Agenda = OwnerAgenda | CollabAgenda
 
-export type AgendaItem = {
+export interface AgendaItem {
   index: number
   title: string
   text: string
@@ -93,7 +105,7 @@ export enum Agency {
   COLLAB = 'collab'
 }
 
-export type PollItem = {
+export interface PollItem {
   index: number
   // title: string
   text: string

@@ -6,46 +6,56 @@ import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import HeadingTwo from '@/components/HeadingTwo.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import MessageForm from '@/components/MessageForm.vue'
-import type { Question } from '@/types'
+import ValidationError from '@/components/ValidationError.vue'
+import { getPluralEnding } from '@/utils/getPluralEnding'
+import { ConversationType, type Message, type Question } from '@/types'
+import { storeToRefs } from 'pinia'
 
 const koreroStore = useKoreroStore()
-// We know the conversation is a question
-const question = koreroStore.currentConversation as Question
+const { currentConversation, messages, user } = storeToRefs(koreroStore)
 
-// QUESTION
+// We know the conversation is a question
+const question = computed(() => currentConversation.value as Question)
 
 async function markAnswer(messageId: string) {
-  await koreroStore.updateConversation(question.id, {
-    answer: messageId
+  await koreroStore.updateConversation(question.value.id, {
+    answerId: messageId
   })
 }
 
-const chosenAnswer = computed(() =>
-  koreroStore.messages.find((answer) => answer.id === question.answer)
-)
+const chosenAnswer = computed<Message | undefined>(() => {
+  return messages.value.find((answerId) => answerId.id === question.value.answerId)
+})
 </script>
 
 <template>
-  <ToastUiViewer :initialValue="question.message" />
+  <template v-if="question.type !== ConversationType.QUESTION">
+    <ValidationError>Conversation type is not <strong>question</strong>!</ValidationError>
+  </template>
+  <template v-else>
+    <ToastUiViewer :initialValue="question.message" />
 
-  <div v-if="chosenAnswer" class="pt-8">
-    <ChatMessage :message="chosenAnswer" />
-    <div class="badge badge-success">Chosen Answer</div>
-  </div>
-
-  <HeadingTwo class="pt-8 text-center">Answers</HeadingTwo>
-
-  <div v-for="message in koreroStore.messages" :key="message.id">
-    <ChatMessage :message="message" />
-    <div v-if="question.answer === message.id" class="badge badge-success">Chosen Answer</div>
-    <div v-else-if="!question.answer && question.authorId === koreroStore.user.id">
-      <button @click="markAnswer(message.id)" class="btn btn-sm btn-accent mt-1">
-        Mark as answer
-      </button>
+    <div v-if="chosenAnswer" class="pt-8">
+      <ChatMessage :message="chosenAnswer" />
+      <div class="badge badge-success">Chosen Answer</div>
     </div>
-  </div>
 
-  <MessageForm v-if="!question.answer" />
+    <HeadingTwo class="pt-4"
+      >{{ messages.length }} Answer{{ getPluralEnding(messages) }}</HeadingTwo
+    >
+
+    <div v-for="message in messages" :key="message.id">
+      <ChatMessage :message="message" />
+      <div v-if="question.answerId === message.id" class="badge badge-success">Chosen Answer</div>
+      <div v-else-if="!question.answerId && question.authorId === user.id">
+        <button @click="markAnswer(message.id)" class="btn btn-sm btn-accent mt-1">
+          Mark as answer
+        </button>
+      </div>
+    </div>
+
+    <MessageForm v-if="!question.answerId" />
+  </template>
 </template>
 
 <style></style>

@@ -2,10 +2,14 @@
 import { useKoreroStore } from '@/stores/korero'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import type { Announcement } from '@/types'
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
 
 const koreroStore = useKoreroStore()
-// We know the conversation is an announcement
-const announcement = koreroStore.currentConversation as Announcement
+const { currentConversation } = storeToRefs(koreroStore)
+
+// We know the conversation is a announcement
+const announcement = computed(() => currentConversation.value as Announcement)
 </script>
 
 <template>

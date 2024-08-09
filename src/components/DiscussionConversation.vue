@@ -4,19 +4,24 @@ import HeadingTwo from '@/components/HeadingTwo.vue'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import MessageForm from '@/components/MessageForm.vue'
+import { getPluralEnding } from '@/utils/getPluralEnding'
 import type { Discussion } from '@/types'
+import { computed } from 'vue'
+import { storeToRefs } from 'pinia'
 
 const koreroStore = useKoreroStore()
+const { currentConversation, messages } = storeToRefs(koreroStore)
+
 // We know the conversation is a discussion
-const discussion = koreroStore.currentConversation as Discussion
+const discussion = computed(() => currentConversation.value as Discussion)
 </script>
 
 <template>
   <ToastUiViewer :initialValue="discussion.message" />
 
-  <HeadingTwo class="pt-8 text-center">Comments</HeadingTwo>
+  <HeadingTwo class="pt-4">{{ messages.length }} Comment{{ getPluralEnding(messages) }}</HeadingTwo>
 
-  <ChatMessage v-for="message in koreroStore.messages" :key="message.id" :message="message" />
+  <ChatMessage v-for="message in messages" :key="message.id" :message="message" />
 
   <MessageForm />
 </template>

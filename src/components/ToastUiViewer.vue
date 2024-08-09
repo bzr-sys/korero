@@ -18,7 +18,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="bg-slate-100 p-4">
+  <div class="bg-slate-100 p-4 rounded">
     <div ref="viewer"></div>
   </div>
 </template>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
-import router from '@/router'
-import ClickableCard from '@/components/ClickableCard.vue'
+import BaseCard from '@/components/BaseCard.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 const koreroStore = useKoreroStore()
 if (!koreroStore.config) {
@@ -19,12 +21,6 @@ if (!koreroStore.config) {
 function chooseOrg() {
   koreroStore.setOrg(koreroStore.user.id)
 }
-
-function goToChannel(channelId: string) {
-  if (channelId) {
-    router.push({ name: 'channel', params: { id: channelId } })
-  }
-}
 </script>
 
 <template>
@@ -35,8 +31,8 @@ function goToChannel(channelId: string) {
     </div>
 
     <div v-else>
-      <div class="text-center pb-12">
-        <HeadingOne class="text-center pb-6">Channels</HeadingOne>
+      <div class="flex gap-4 justify-between items-center">
+        <HeadingOne>Channels</HeadingOne>
         <div>
           <RouterLink :to="{ name: 'newChannel' }" class="btn btn-sm btn-accent"
             >Create a new channel</RouterLink
@@ -44,15 +40,18 @@ function goToChannel(channelId: string) {
         </div>
       </div>
 
+      <p v-if="koreroStore.channels.length === 0" class="text-center py-12">
+        Create a channel to get started.
+      </p>
+
       <div class="grid grid-cols-3 gap-4 py-4">
-        <ClickableCard
-          v-for="channel in koreroStore.channels"
-          :key="channel.id"
-          @click="goToChannel(channel.id)"
-          class="mb-4"
-        >
-          <h2 class="card-title">{{ channel.name }}</h2>
-        </ClickableCard>
+        <BaseCard v-for="channel in koreroStore.channels" :key="channel.id" class="mb-4">
+          <h2 class="card-title">
+            <RouterLink :to="{ name: 'channel', params: { channelId: channel.id } }">{{
+              channel.name
+            }}</RouterLink>
+          </h2>
+        </BaseCard>
       </div>
     </div>
   </main>
