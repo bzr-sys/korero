@@ -38,15 +38,6 @@ const currentChannel = computed(() => {
       <li v-if="currentTitle">
         <span class="truncate max-w-60">{{ currentTitle }}</span>
       </li>
-
-      <!-- if channel view -->
-      <!-- `channel`               'channel-name' -->
-      <!-- `channelByType`         'channel-name' -->
-      <!-- `newConversationChoose` [channel-name]() / Create conversation -->
-      <!-- `newConversation`       [channel-name]() / Create conversation -->
-
-      <!-- if conversation -->
-      <!-- Channels / <channel-name> [link] / Conversation name -->
     </ul>
   </div>
 </template>
