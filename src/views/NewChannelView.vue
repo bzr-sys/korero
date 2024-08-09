@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import HeadingOne from '@/components/HeadingOne.vue'
 import TextInput from '@/components/TextInput.vue'
+import SmallContainer from '@/components/SmallContainer.vue'
 import { useKoreroStore } from '@/stores/korero'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -15,27 +16,27 @@ async function createChannel() {
   if (!channelName.value) {
     return
   }
-  const id = await koreroStore.createChannel(channelName.value)
+  const channelId = await koreroStore.createChannel(channelName.value)
   channelName.value = ''
 
-  if (!id) {
+  if (!channelId) {
     console.error('No channel ID after trying to create channel')
     return
   }
 
-  router.push({ name: 'channel', params: { id } })
+  router.push({ name: 'channel', params: { channelId } })
 }
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto">
-    <HeadingOne>Create a new channel</HeadingOne>
+  <SmallContainer>
+    <HeadingOne class="mb-4">Create a new channel</HeadingOne>
 
     <form @submit.prevent="createChannel">
       <TextInput label="Channel name" v-model="channelName" />
       <button class="btn btn-accent">Create channel</button>
     </form>
-  </div>
+  </SmallContainer>
 </template>
 
 <style scoped></style>

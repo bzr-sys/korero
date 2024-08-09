@@ -14,6 +14,7 @@ const props = withDefaults(
     validationError?: string
   }>(),
   {
+    label: '',
     height: '500px',
     initialEditType: 'markdown',
     validationError: ''

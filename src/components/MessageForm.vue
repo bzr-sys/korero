@@ -7,9 +7,11 @@ import { ref } from 'vue'
 const props = withDefaults(
   defineProps<{
     label?: string
+    buttonText?: string
   }>(),
   {
-    label: 'Write a comment'
+    label: 'Write a comment',
+    buttonText: 'Comment'
   }
 )
 
@@ -41,7 +43,6 @@ async function postMessage() {
 
 <template>
   <ToastUiEditor
-    class="pt-8"
     @updateValue="(t) => (message = t)"
     :label="props.label"
     height="auto"
@@ -49,7 +50,7 @@ async function postMessage() {
     ref="editor"
     :validationError="validationError"
   />
-  <button @click="postMessage" class="btn mt-4 justify-self-start">Comment</button>
+  <button @click="postMessage" class="btn justify-self-start">{{ buttonText }}</button>
 </template>
 
 <style scoped></style>

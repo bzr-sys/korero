@@ -9,8 +9,8 @@ import {
   type Doc,
   type User
 } from '@bzr/bazaar'
-import type { Config, Conversation, Message } from '@/types'
-import { dateObjToDatetimeLocalFormat } from '@/date'
+import { type Config, type Conversation, type Message } from '@/types'
+import { dateStrToISO } from '@/date'
 
 const CONFIG_COLLECTION = 'configs'
 const CHANNEL_COLLECTION = 'channels'
@@ -209,6 +209,8 @@ export const useKoreroStore = defineStore('korero', () => {
         .getOne(id)
     }
 
+    setChannel(currentConversation.value.channelId)
+
     unsubscribeConversation = await bzr
       .collection<Conversation>(CONVERSATION_COLLECTION, { userId: config.value!.currentTeam })
       .subscribeOne(id, { onChange: (_, newDoc) => (currentConversation.value = newDoc) })
@@ -229,7 +231,7 @@ export const useKoreroStore = defineStore('korero', () => {
     if (config.value) {
       const newMessage = {
         ...message,
-        created: dateObjToDatetimeLocalFormat(),
+        created: dateStrToISO(),
         authorId: user.value.id
         // authorId: 'fa3b7079-daab-4d28-a356-8468a17434cd'
       }

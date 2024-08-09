@@ -2,20 +2,23 @@
 import { computed } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
-import router from '@/router'
 import AnnouncementConversation from '@/components/AnnouncementConversation.vue'
 import DiscussionConversation from '@/components/DiscussionConversation.vue'
 import BrainstormConversation from '@/components/BrainstormConversation.vue'
 import QuestionConversation from '@/components/QuestionConversation.vue'
 import PollConversation from '@/components/PollConversation.vue'
 import MeetingConversation from '@/components/MeetingConversation.vue'
-import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
-import { ConversationType } from '@/types'
+import ChannelBreadcrumbNav from '@/components/ChannelBreadcrumbNav.vue'
+import FormatDateString from '@/components/FormatDateString.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
+import SmallContainer from '@/components/SmallContainer.vue'
+import { ConversationType } from '@/types'
+import { useRoute } from 'vue-router'
 
-const conversationId = router.currentRoute.value.params.id
-
+const route = useRoute()
 const koreroStore = useKoreroStore()
+
+const conversationId = route.params.conversationId as string
 
 koreroStore.setConversation(conversationId as string)
 
@@ -28,26 +31,24 @@ const conversationTitle = computed(() => {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto">
+  <ChannelBreadcrumbNav :currentTitle="conversationTitle" />
+
+  <SmallContainer>
     <template v-if="!koreroStore.currentConversation">
       <p>Cannot find conversation</p>
     </template>
     <template v-else>
-      <BreadcrumbNav>
-        <li>
-          <RouterLink
-            :to="{ name: 'channel', params: { id: koreroStore.currentConversation.channelId } }"
-          >
-            <span class="sr-only">Channel name: </span>
-            {{ koreroStore.getChannel(koreroStore.currentConversation.channelId).name }}
-          </RouterLink>
-        </li>
-        <li>
-          <div class="badge">{{ koreroStore.currentConversation.type }}</div>
-        </li>
-      </BreadcrumbNav>
-
-      <HeadingOne class="text-center pb-8">{{ conversationTitle }}</HeadingOne>
+      <div class="pb-4">
+        <HeadingOne>{{ conversationTitle }}</HeadingOne>
+        <div class="italic text-xs">
+          By {{ koreroStore.getUser(koreroStore.currentConversation.authorId).name }} on
+          <FormatDateString
+            :dateString="koreroStore.currentConversation.created"
+            :defaultCss="false"
+          />
+        </div>
+        <div class="badge">{{ koreroStore.currentConversation.type }}</div>
+      </div>
 
       <div class="grid gap-4">
         <AnnouncementConversation
@@ -71,7 +72,7 @@ const conversationTitle = computed(() => {
         <div v-else>Unknown conversation type</div>
       </div>
     </template>
-  </div>
+  </SmallContainer>
 </template>
 
 <style></style>

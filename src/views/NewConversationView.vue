@@ -1,69 +1,70 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-
 import { useKoreroStore } from '@/stores/korero'
-import router from '@/router'
+import ChannelBreadcrumbNav from '@/components/ChannelBreadcrumbNav.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
 import BaseLegend from '@/components/BaseLegend.vue'
-import BreadcrumbNav from '@/components/BreadcrumbNav.vue'
 import TextInput from '@/components/TextInput.vue'
 import DateInput from '@/components/DateInput.vue'
+import SmallContainer from '@/components/SmallContainer.vue'
 import { ConversationType, Agency } from '@/types'
-import type { Meeting, Poll, Brainstorm, Conversation } from '@/types'
-import { dateObjToDatetimeLocalFormat } from '@/date'
+import type { Meeting, Poll, Brainstorm, Conversation, OwnerAgenda, CollabAgenda } from '@/types'
+import { dateStrToISO } from '@/date'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-const channelId = router.currentRoute.value.params.id
+const route = useRoute()
+const router = useRouter()
+
+const channelId = route.params.channelId as string
+const conversationType = route.query.type as ConversationType
 
 const koreroStore = useKoreroStore()
 
-koreroStore.setChannel(channelId as string)
-
-const currentChannel = computed(() => {
-  return koreroStore.channels.find((c) => {
-    return c.id === channelId
-  })
-})
-
-const channelName = computed(() => {
-  if (currentChannel.value) {
-    return currentChannel.value.name
-  }
-  return channelId
-})
+koreroStore.setChannel(channelId)
 
 async function createConversation() {
   if (!title.value) {
     return
   }
-  if (!message.value) {
+  if (chosenType.value !== ConversationType.MEETING && !message.value) {
     messageValidationError.value = 'A message is required'
     return
   }
   //
   let c: Omit<Conversation, 'id'> = {
-    channelId: channelId as string,
-    authorId: koreroStore.user.id,
+    channelId: channelId,
     title: title.value,
+    authorId: koreroStore.user.id,
     archived: false,
-    created: dateObjToDatetimeLocalFormat(),
+    created: dateStrToISO(),
     //
-    message: message.value,
     reactions: [],
+    message: message.value,
     //
     type: chosenType.value
   }
   switch (chosenType.value) {
     case ConversationType.MEETING:
-      // console.log('case is Meeting')
-      c = {
-        ...c,
-        date: date.value,
-        agenda: {
+      // TODO collabAgenda `due` should be before meeting `date`
+      if (agendaSetting.value === Agency.OWNER) {
+        const ownerAgenda: OwnerAgenda = {
+          setting: Agency.OWNER,
+          text: agendaText.value
+        }
+        const ownerMeeting: Omit<Meeting, 'id'> = {
+          ...c,
+          type: ConversationType.MEETING,
+          date: dateStrToISO(meetingDate.value),
+          agenda: ownerAgenda
+        }
+        c = ownerMeeting
+      }
+      if (agendaSetting.value === Agency.COLLAB) {
+        const collabAgenda: CollabAgenda = {
           setting: agendaSetting.value,
           decision: agendaDecision.value,
-          due: due.value,
           items: agendaItems.value.map((item, index) => {
             return {
               index,
@@ -72,34 +73,48 @@ async function createConversation() {
               approved: false,
               votes: []
             }
-          })
+          }),
+          due: dateStrToISO(due.value)
         }
-      } as Omit<Meeting, 'id'>
+        const collabMeeting: Omit<Meeting, 'id'> = {
+          ...c,
+          type: ConversationType.MEETING,
+          date: dateStrToISO(meetingDate.value),
+          agenda: collabAgenda
+        }
+        c = collabMeeting
+      }
       break
-    case ConversationType.POLL:
-      c = {
+    case ConversationType.POLL: {
+      const poll: Omit<Poll, 'id'> = {
         ...c,
+        type: ConversationType.POLL,
         multipleAnswers: multipleAnswers.value,
         items: pollOptions.value.map((t, i) => {
           return { index: i, text: t, votes: [] }
         }),
-        due: due.value
-      } as Omit<Poll, 'id'>
+        due: dateStrToISO(due.value)
+      }
+      c = poll
       break
-    case ConversationType.BRAINSTORM:
-      c = {
+    }
+    case ConversationType.BRAINSTORM: {
+      const brainstorm: Omit<Brainstorm, 'id'> = {
         ...c,
-        due: due.value
-      } as Omit<Brainstorm, 'id'>
+        type: ConversationType.BRAINSTORM,
+        due: dateStrToISO(due.value)
+      }
+      c = brainstorm
       break
+    }
     case ConversationType.DISCUSSION:
     case ConversationType.ANNOUNCEMENT:
     case ConversationType.QUESTION:
     default:
       break
   }
-  const id = await koreroStore.createConversation(c)
-  router.push({ name: 'conversation', params: { id: id } })
+  const conversationId = await koreroStore.createConversation(c)
+  router.push({ name: 'conversation', params: { conversationId } })
 }
 
 function addAgendaItem() {
@@ -115,7 +130,7 @@ for (const t of Object.values(ConversationType)) {
   conversationTypes.value.push({ id: t, value: t.charAt(0).toUpperCase() + t.slice(1) })
 }
 
-const chosenType = ref(ConversationType.DISCUSSION)
+const chosenType = ref(conversationType)
 const messageDescription = computed(() => {
   switch (chosenType.value) {
     case ConversationType.MEETING:
@@ -142,57 +157,44 @@ const message = ref('')
 const pollOptions = ref(['', ''])
 const multipleAnswers = ref(false)
 const agendaSetting = ref(Agency.OWNER)
+const agendaText = ref('')
 const agendaDecision = ref(Agency.OWNER)
 const agendaItems = ref([{ ...emptyAgendaItem }])
 const due = ref('')
-const date = ref('')
+const meetingDate = ref('')
 const messageValidationError = ref('')
-
-const dateMin = dateObjToDatetimeLocalFormat()
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto">
-    <BreadcrumbNav>
-      <li>
-        <RouterLink :to="{ name: 'channel', params: { id: channelId } }">
-          <span class="sr-only">Channel name: </span>{{ channelName }}
-        </RouterLink>
-      </li>
-      <li>New conversation</li>
-    </BreadcrumbNav>
-
-    <HeadingOne class="pb-6">Create a new conversation</HeadingOne>
+  <ChannelBreadcrumbNav :currentTitle="`Create a new ${conversationType}`" />
+  <SmallContainer>
+    <HeadingOne>Create a new {{ conversationType }}</HeadingOne>
+    <div class="pb-6 text-xs">
+      <RouterLink :to="{ name: 'newConversationChoose', params: { channelId } }" class="link"
+        >Choose a different type</RouterLink
+      >
+    </div>
 
     <form @submit.prevent="createConversation">
-      <fieldset>
-        <BaseLegend>Choose conversation type</BaseLegend>
-        <div class="max-w-xs mb-8">
-          <div v-for="t in conversationTypes" :key="t.id" class="form-control">
-            <label class="label cursor-pointer">
-              <span class="label-text">{{ t.value }}</span>
-              <input type="radio" class="radio" :value="t.id" v-model="chosenType" />
-            </label>
-          </div>
-        </div>
-      </fieldset>
+      <input type="hidden" v-model="chosenType" />
 
       <TextInput label="Title" v-model="title" />
 
       <div>
         <ToastUiEditor
+          v-if="chosenType !== ConversationType.MEETING"
           @updateValue="(t) => (message = t)"
           :label="messageDescription"
           height="auto"
           initialEditType="markdown"
           :validationError="messageValidationError"
-          class="mb-8"
+          class="mb-4"
         />
 
         <!-- MEETING -->
 
         <div v-if="chosenType === ConversationType.MEETING">
-          <DateInput label="Date" v-model="date" />
+          <DateInput label="Date" v-model="meetingDate" />
 
           <fieldset>
             <BaseLegend>Agenda settings</BaseLegend>
@@ -217,7 +219,16 @@ const dateMin = dateObjToDatetimeLocalFormat()
             </div>
           </fieldset>
 
-          <div v-if="agendaSetting === Agency.COLLAB">
+          <template v-if="agendaSetting === Agency.OWNER">
+            <!-- Agenda items in a single field for non-collab -->
+            <ToastUiEditor
+              @updateValue="(t) => (agendaText = t)"
+              label="Agenda Items"
+              height="auto"
+              initialEditType="markdown"
+            />
+          </template>
+          <template v-if="agendaSetting === Agency.COLLAB">
             <DateInput label="Agenda Item Proposal Due Date" v-model="due" />
 
             <fieldset>
@@ -249,27 +260,26 @@ const dateMin = dateObjToDatetimeLocalFormat()
                 </div>
               </div>
             </fieldset>
-          </div>
+            <fieldset>
+              <BaseLegend>Agenda items</BaseLegend>
 
-          <fieldset>
-            <BaseLegend>Agenda items</BaseLegend>
+              <BaseCard v-for="(item, index) in agendaItems" :key="index" class="mb-4">
+                <div>Agenda item {{ index + 1 }}</div>
 
-            <button class="btn btn-sm mb-4" type="button" @click="addAgendaItem">Add item</button>
+                <TextInput label="Title" v-model="item.title" />
 
-            <BaseCard v-for="(item, index) in agendaItems" :key="index" class="mb-4">
-              <div>Agenda item {{ index + 1 }}</div>
+                <!-- Description is optional -->
+                <ToastUiEditor
+                  @updateValue="(t) => (item.text = t)"
+                  label="Description"
+                  height="auto"
+                  initialEditType="markdown"
+                />
+              </BaseCard>
 
-              <TextInput label="Title" v-model="item.title" />
-
-              <!-- Description is optional -->
-              <ToastUiEditor
-                @updateValue="(t) => (item.text = t)"
-                label="Description"
-                height="auto"
-                initialEditType="markdown"
-              />
-            </BaseCard>
-          </fieldset>
+              <button class="btn btn-sm mb-4" type="button" @click="addAgendaItem">Add item</button>
+            </fieldset>
+          </template>
         </div>
 
         <!-- POLL -->
@@ -280,8 +290,6 @@ const dateMin = dateObjToDatetimeLocalFormat()
           <fieldset class="mb-4">
             <BaseLegend>Poll options</BaseLegend>
 
-            <button class="btn btn-sm mb-4" type="button" @click="addPollOption">Add option</button>
-
             <TextInput
               v-for="(option, index) in pollOptions"
               :key="index"
@@ -289,6 +297,8 @@ const dateMin = dateObjToDatetimeLocalFormat()
               v-model="pollOptions[index]"
               :srOnlyLabel="true"
             />
+
+            <button class="btn btn-sm mb-4" type="button" @click="addPollOption">Add option</button>
           </fieldset>
 
           <div class="form-control max-w-xs mb-8">
@@ -308,9 +318,9 @@ const dateMin = dateObjToDatetimeLocalFormat()
         />
       </div>
 
-      <button class="btn btn-accent mt-4">Create conversation</button>
+      <button class="btn btn-accent mt-4">Create {{ conversationType }}</button>
     </form>
-  </div>
+  </SmallContainer>
 </template>
 
 <style></style>

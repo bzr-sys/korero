@@ -3,6 +3,8 @@ import HomeView from '../views/HomeView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import NewChannelView from '../views/NewChannelView.vue'
 import ChannelView from '../views/ChannelView.vue'
+import ChannelViewHome from '../views/ChannelViewHome.vue'
+import NewConversationChooseView from '../views/NewConversationChooseView.vue'
 import NewConversationView from '../views/NewConversationView.vue'
 import ConversationView from '../views/ConversationView.vue'
 import { bzr } from '@/bazaar'
@@ -27,19 +29,40 @@ const router = createRouter({
       component: NewChannelView
     },
     {
-      path: '/channel/:id',
-      name: 'channel',
-      component: ChannelView
+      path: '/channel/:channelId',
+      component: ChannelView,
+      children: [
+        {
+          path: '',
+          name: 'channel',
+          component: ChannelViewHome,
+          meta: { group: 'channelParent' }
+        },
+        {
+          path: 'type/:conversationType',
+          name: 'channelByType',
+          component: ChannelViewHome,
+          meta: { group: 'channelParent' }
+        },
+        {
+          path: 'new/choose',
+          name: 'newConversationChoose',
+          component: NewConversationChooseView,
+          meta: { group: 'channelChild' }
+        },
+        {
+          path: 'new',
+          name: 'newConversation',
+          component: NewConversationView,
+          meta: { group: 'channelChild' }
+        }
+      ]
     },
     {
-      path: '/channel/:id/new',
-      name: 'newConversation',
-      component: NewConversationView
-    },
-    {
-      path: '/conversation/:id',
+      path: '/conversation/:conversationId',
       name: 'conversation',
-      component: ConversationView
+      component: ConversationView,
+      meta: { group: 'channelChild' }
     }
   ]
 })

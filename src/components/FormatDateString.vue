@@ -1,13 +1,19 @@
 <script setup lang="ts">
 import type { DatetimeLocalInputString } from '@/types'
 
-defineProps<{
-  dateString: DatetimeLocalInputString
-}>()
+const props = withDefaults(
+  defineProps<{
+    dateString: DatetimeLocalInputString
+    defaultCss?: boolean
+  }>(),
+  {
+    defaultCss: true
+  }
+)
 
 function formatDateString(string: DatetimeLocalInputString) {
   const date = new Date(string)
-  return date.toLocaleDateString('en-GB', {
+  return date.toLocaleDateString(undefined, {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -19,7 +25,9 @@ function formatDateString(string: DatetimeLocalInputString) {
 </script>
 
 <template>
-  <div class="italic text-xs">{{ formatDateString(dateString) }}</div>
+  <time :class="{ 'italic text-xs': props.defaultCss }" :datetime="dateString">{{
+    formatDateString(dateString)
+  }}</time>
 </template>
 
 <style scoped></style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { dateObjToDatetimeLocalFormat } from '@/date'
+import { isoToDatetimeLocalInputStr } from '@/date'
 
 const model = defineModel()
 
@@ -7,7 +7,8 @@ const props = defineProps<{
   label: string
 }>()
 
-const dateMin = dateObjToDatetimeLocalFormat()
+/** Min date is now */
+const dateMin = isoToDatetimeLocalInputStr(new Date().toISOString())
 </script>
 
 <template>
