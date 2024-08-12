@@ -7,9 +7,11 @@ import {
   type BazaarMessage,
   type DeepPartial,
   type Doc,
-  type User
+  type User,
+  type Team,
+  type Org
 } from '@bzr/bazaar'
-import { type Config, type Conversation, type Message } from '@/types'
+import { type Channel, type Config, type Conversation, type Message } from '@/types'
 import { dateStrToISO } from '@/date'
 
 const CONFIG_COLLECTION = 'configs'
@@ -24,11 +26,17 @@ const emptyUser: User = {
   handle: ''
 }
 
+type OrgTeam = Org & {
+  teams: Team[]
+}
+
 export const useKoreroStore = defineStore('korero', () => {
   const loaded = ref(false)
   const authenticated = ref(false)
   const config = ref<Config | undefined>(undefined)
   const user = ref<User>(emptyUser)
+  const teams = ref<Team[]>([])
+  const orgs = ref<OrgTeam[]>([])
 
   /** A list of users, e.g. those who have authored messages  */
   const users: Ref<User[]> = ref([])
@@ -60,6 +68,23 @@ export const useKoreroStore = defineStore('korero', () => {
           syncChannels()
         }
 
+        // Get teams
+        teams.value = await bzr.org.teams.list()
+        let orgIds: { [key: string]: boolean } = {}
+        for (const team of teams.value) {
+          if (team.ownerType === 'org') {
+            orgIds[team.owner] = true
+          }
+        }
+        for (const orgId in orgIds) {
+          // TODO account for exceptions
+          const o = await bzr.org.getOrg({ orgId: orgId })
+          orgs.value.push({
+            ...o,
+            teams: teams.value.filter((t) => t.owner === o.id)
+          })
+        }
+
         authenticated.value = true
         loaded.value = true
       } catch (e: unknown) {
@@ -70,12 +95,15 @@ export const useKoreroStore = defineStore('korero', () => {
     }
   }
 
-  async function setOrg(teamId: string) {
+  async function setTeam(teamId: string) {
     if (config.value) {
-      await configCollection.updateOne(config.value.id, { currentTeam: teamId })
+      if (!config.value.teams.includes(teamId)) {
+        config.value.teams.push(teamId)
+      }
       config.value.currentTeam = teamId
+      await configCollection.updateOne(config.value.id, config.value)
     } else {
-      const newConfig = { currentTeam: teamId, teams: [] }
+      const newConfig = { currentTeam: teamId, teams: [teamId] }
       const configId = await configCollection.insertOne(newConfig)
       config.value = { id: configId, ...newConfig }
     }
@@ -86,9 +114,6 @@ export const useKoreroStore = defineStore('korero', () => {
   // Load and manage channels in a team
   //
 
-  type Channel = Doc & {
-    name: string
-  }
   const channels = ref<Channel[]>([])
   let unsubscribeChannels: (() => Promise<BazaarMessage>) | undefined = undefined
   // let channelCollection = undefined;
@@ -101,12 +126,8 @@ export const useKoreroStore = defineStore('korero', () => {
       unsubscribeChannels = undefined
     }
 
-    // TODO we currently do not support collection creation with a set userId
-    // unsubscribeChannels = await bzr
-    //   .collection<Channel>(CHANNEL_COLLECTION, { userId: config.value!.currentTeam })
-    //   .subscribeAll({}, arrayMirrorSubscribeListener<Channel>(channels.value))
     unsubscribeChannels = await bzr
-      .collection<Channel>(CHANNEL_COLLECTION)
+      .collection<Channel>(CHANNEL_COLLECTION, { teamId: config.value?.currentTeam })
       .subscribeAll({}, arrayMirrorSubscribeListener<Channel>(channels.value))
     return
   }
@@ -116,8 +137,8 @@ export const useKoreroStore = defineStore('korero', () => {
       return ''
     }
     return bzr
-      .collection<Channel>(CHANNEL_COLLECTION, { userId: config.value!.currentTeam })
-      .insertOne({ name: name })
+      .collection<Channel>(CHANNEL_COLLECTION, { teamId: config.value!.currentTeam })
+      .insertOne({ name: name, description: '', archived: false })
   }
 
   //
@@ -138,7 +159,7 @@ export const useKoreroStore = defineStore('korero', () => {
 
     if (!currentChannel.value) {
       currentChannel.value = await bzr
-        .collection<Channel>(CHANNEL_COLLECTION, { userId: config.value!.currentTeam })
+        .collection<Channel>(CHANNEL_COLLECTION, { teamId: config.value!.currentTeam })
         .getOne(id)
     }
 
@@ -152,7 +173,7 @@ export const useKoreroStore = defineStore('korero', () => {
 
     // TODO how to make sure only members of this channel can read these conversations?
     unsubscribeConversations = await bzr
-      .collection<Conversation>(CONVERSATION_COLLECTION)
+      .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
       .subscribeAll(
         { channelId: id },
         arrayMirrorSubscribeListener<Conversation>(conversations.value)
@@ -160,13 +181,20 @@ export const useKoreroStore = defineStore('korero', () => {
   }
 
   function getChannel(id: string): Channel {
-    return channels.value.find((c) => c.id === id) || { id: '', name: 'Unknown Channel' }
+    return (
+      channels.value.find((c) => c.id === id) || {
+        id: '',
+        name: 'Unknown Channel',
+        description: '',
+        archived: false
+      }
+    )
   }
 
   async function createConversation(conversation: Omit<Conversation, 'id'>) {
     if (config.value) {
       return bzr
-        .collection<Conversation>(CONVERSATION_COLLECTION, { userId: config.value!.currentTeam })
+        .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
         .insertOne(conversation)
     }
   }
@@ -205,14 +233,14 @@ export const useKoreroStore = defineStore('korero', () => {
 
     if (!currentConversation.value) {
       currentConversation.value = await bzr
-        .collection<Conversation>(CONVERSATION_COLLECTION, { userId: config.value!.currentTeam })
+        .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
         .getOne(id)
     }
 
     setChannel(currentConversation.value.channelId)
 
     unsubscribeConversation = await bzr
-      .collection<Conversation>(CONVERSATION_COLLECTION, { userId: config.value!.currentTeam })
+      .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
       .subscribeOne(id, { onChange: (_, newDoc) => (currentConversation.value = newDoc) })
 
     if (unsubscribeMessages) {
@@ -223,7 +251,7 @@ export const useKoreroStore = defineStore('korero', () => {
     // TODO how to make sure only members of this channel can read these messages?
     messages.value = []
     unsubscribeMessages = await bzr
-      .collection<Message>(MESSAGE_COLLECTION)
+      .collection<Message>(MESSAGE_COLLECTION, { teamId: config.value!.currentTeam })
       .subscribeAll({ conversationId: id }, arrayMirrorSubscribeListener<Message>(messages.value))
   }
 
@@ -237,7 +265,7 @@ export const useKoreroStore = defineStore('korero', () => {
       }
 
       return bzr
-        .collection<Message>(MESSAGE_COLLECTION, { userId: config.value!.currentTeam })
+        .collection<Message>(MESSAGE_COLLECTION, { teamId: config.value!.currentTeam })
         .insertOne(newMessage)
     }
   }
@@ -255,7 +283,7 @@ export const useKoreroStore = defineStore('korero', () => {
   async function updateConversation(id: string, doc: DeepPartial<Conversation>) {
     if (config.value) {
       return bzr
-        .collection<Conversation>(CONVERSATION_COLLECTION, { userId: config.value!.currentTeam })
+        .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
         .updateOne(id, doc)
     }
   }
@@ -265,13 +293,14 @@ export const useKoreroStore = defineStore('korero', () => {
     getUser,
     users,
     config,
+    orgs,
     loaded,
     authenticated,
     autoSignIn,
 
     // Org view
     channels,
-    setOrg,
+    setTeam,
     createChannel,
 
     // Channel view
