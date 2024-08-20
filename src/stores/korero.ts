@@ -70,7 +70,7 @@ export const useKoreroStore = defineStore('korero', () => {
 
         // Get teams
         teams.value = await bzr.org.teams.list()
-        let orgIds: { [key: string]: boolean } = {}
+        const orgIds: { [key: string]: boolean } = {}
         for (const team of teams.value) {
           if (team.ownerType === 'org') {
             orgIds[team.owner] = true
