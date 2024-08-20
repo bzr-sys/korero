@@ -46,13 +46,13 @@ const canWrite = computed(() => {
   </template>
 
   <template v-else>
-    <HeadingTwo class="pt-4">My Suggestion</HeadingTwo>
     <ToastUiViewer v-for="message in myMessages" :key="message.id" :initialValue="message.text" />
   </template>
 
   <MessageForm
     v-if="canWrite"
-    :label="pastDue ? 'Add a comment' : 'Add your brainstorm suggestion'"
+    :label="pastDue ? 'Add a comment' : 'Contribute your ideas'"
+    :buttonText="pastDue ? 'Comment' : 'Contribute ideas'"
   />
 </template>
 
