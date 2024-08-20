@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useKoreroStore } from '@/stores/korero'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
-import FormatDateString from '@/components/FormatDateString.vue'
+import DueDate from './DueDate.vue'
 import BaseLegend from './BaseLegend.vue'
 import HeadingTwo from './HeadingTwo.vue'
 import CircleCheckSVG from './CircleCheckSVG.vue'
@@ -59,7 +59,7 @@ async function votePoll() {
 </script>
 
 <template>
-  <FormatDateString :dateString="poll.due" />
+  <DueDate label="Vote by" :dateString="poll.due" />
 
   <ToastUiViewer :initialValue="poll.message" class="mb-4" />
 

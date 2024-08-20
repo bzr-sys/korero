@@ -5,7 +5,7 @@ import ToastUiEditor from '@/components/ToastUiEditor.vue'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import TextInput from '@/components/TextInput.vue'
 import MeetingNotes from './MeetingNotes.vue'
-import FormatDateString from '@/components/FormatDateString.vue'
+import DueDate from '@/components/DueDate.vue'
 import { Agency, type AgendaItem, type CollabAgenda, type Meeting } from '@/types'
 import { storeToRefs } from 'pinia'
 import { computed, ref, type ComputedRef } from 'vue'
@@ -119,8 +119,7 @@ async function addAgendaItem() {
     </BaseCard>
 
     <div class="pb-4">
-      <div>Agenda items proposal due date</div>
-      <FormatDateString :dateString="collabAgenda.due" />
+      <DueDate label="Propose agenda items by" :dateString="collabAgenda.due" />
     </div>
 
     <form @submit.prevent="addAgendaItem">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useKoreroStore } from '@/stores/korero'
-import FormatDateString from '@/components/FormatDateString.vue'
+import DueDate from '@/components/DueDate.vue'
 import HeadingTwo from './HeadingTwo.vue'
 import ToastUiViewer from '@/components/ToastUiViewer.vue'
 import MessageForm from '@/components/MessageForm.vue'
@@ -35,7 +35,7 @@ const canWrite = computed(() => {
 </script>
 
 <template>
-  <FormatDateString :dateString="brainstorm.due" />
+  <DueDate label="Contribute ideas by" :dateString="brainstorm.due" />
 
   <ToastUiViewer :initialValue="brainstorm.message" />
 

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useKoreroStore } from '@/stores/korero'
 import HeadingTwo from '@/components/HeadingTwo.vue'
-import FormatDateString from '@/components/FormatDateString.vue'
+import DueDate from './DueDate.vue'
 import OwnerAgenda from '@/components/OwnerAgenda.vue'
 import CollabAgenda from '@/components/CollabAgenda.vue'
 import { Agency, type Meeting } from '@/types'
@@ -16,7 +16,7 @@ const meeting = computed(() => currentConversation.value as Meeting)
 </script>
 
 <template>
-  <div>Meeting Date: <FormatDateString :dateString="meeting.date" :defaultCss="false" /></div>
+  <DueDate label="Meeting on" :dateString="meeting.date" />
 
   <HeadingTwo class="pt-4">Agenda</HeadingTwo>
   <OwnerAgenda v-if="meeting.agenda.setting === Agency.OWNER" />
