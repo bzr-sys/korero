@@ -39,6 +39,9 @@ const conversationTitle = computed(() => {
     </template>
     <template v-else>
       <div class="pb-4">
+        <div class="badge badge-accent" aria-label="Conversation type">
+          {{ koreroStore.currentConversation.type }}
+        </div>
         <HeadingOne>{{ conversationTitle }}</HeadingOne>
         <div class="italic text-xs">
           By {{ koreroStore.getUser(koreroStore.currentConversation.authorId).name }} on
@@ -47,7 +50,6 @@ const conversationTitle = computed(() => {
             :defaultCss="false"
           />
         </div>
-        <div class="badge">{{ koreroStore.currentConversation.type }}</div>
       </div>
 
       <div class="grid gap-4">

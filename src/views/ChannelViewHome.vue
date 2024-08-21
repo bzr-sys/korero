@@ -56,12 +56,8 @@ watch(route, async (newRoute) => {
       </p>
 
       <div class="grid gap-4 py-4">
-        <BaseCard
-          v-for="conversation in filteredConversations"
-          class="relative"
-          :key="conversation.id"
-        >
-          <div class="badge absolute top-0 right-0">{{ conversation.type }}</div>
+        <BaseCard v-for="conversation in filteredConversations" :key="conversation.id">
+          <div class="badge badge-accent">{{ conversation.type }}</div>
           <h2 class="card-title">
             <RouterLink
               :to="{ name: 'conversation', params: { conversationId: conversation.id } }"

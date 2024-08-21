@@ -229,7 +229,7 @@ const messageValidationError = ref('')
             />
           </template>
           <template v-if="agendaSetting === Agency.COLLAB">
-            <DateInput label="Agenda Item Proposal Due Date" v-model="due" />
+            <DateInput label="Agenda item proposal due date" v-model="due" />
 
             <fieldset>
               <legend class="sr-only">Agenda Proposed Items Decision Process</legend>

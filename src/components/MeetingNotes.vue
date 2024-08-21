@@ -42,13 +42,8 @@ const preMeetingMessages = computed(() => {
 })
 
 const postMeetingMessages = computed(() => {
-  console.log('meeting.value.date', meeting.value.date)
   const meetingDate = new Date(meeting.value.date)
-  console.log('# meetingDate vs messageCreated')
-  console.log('meeting date', meetingDate)
   return messages.value.filter((m) => {
-    console.log('- message date str', m.created)
-    console.log(new Date(m.created))
     return new Date(m.created) > meetingDate
   })
 })

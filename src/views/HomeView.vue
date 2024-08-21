@@ -2,11 +2,8 @@
 import { useKoreroStore } from '@/stores/korero'
 import BaseCard from '@/components/BaseCard.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
-import { useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { ref, type Ref } from 'vue'
-
-const router = useRouter()
 
 const koreroStore = useKoreroStore()
 
@@ -50,10 +47,10 @@ function label(teamId: string) {
           <button @click="chooseTeam(user.id)" class="btn btn-accent">Choose team</button>
         </li>
       </ul>
-      <div v-for="org in orgs">
+      <div v-for="org in orgs" :key="org.id">
         <p class="font-bold">{{ org.name }}</p>
         <ul>
-          <li v-for="team in org.teams">
+          <li v-for="team in org.teams" :key="team.id">
             {{ team.name }}
             <button @click="chooseTeam(team.id)" class="btn btn-accent">Choose team</button>
           </li>
@@ -77,10 +74,10 @@ function label(teamId: string) {
             </button>
           </li>
         </ul>
-        <div v-for="org in orgs">
+        <div v-for="org in orgs" :key="org.id">
           <p class="font-bold">{{ org.name }}</p>
           <ul>
-            <li v-for="team in org.teams">
+            <li v-for="team in org.teams" :key="team.id">
               {{ team.name }} {{ label(team.id) }}
               <button
                 v-if="config.currentTeam !== team.id"

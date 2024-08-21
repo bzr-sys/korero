@@ -31,7 +31,7 @@ export type ConversationCommon = Doc & {
   title: string
   authorId: string
   archived: boolean
-  created: DatetimeLocalInputString
+  created: ISODate
   // TODO: how about edits?
 
   //
@@ -57,7 +57,7 @@ export interface Discussion extends ConversationCommon {
 }
 export interface Meeting extends ConversationCommon {
   type: ConversationType.MEETING
-  date: DatetimeLocalInputString
+  date: ISODate
   agenda: Agenda
   notes?: string
 }
@@ -73,11 +73,11 @@ export interface Poll extends ConversationCommon {
   type: ConversationType.POLL
   multipleAnswers: boolean
   items: PollItem[]
-  due: DatetimeLocalInputString
+  due: ISODate
 }
 export interface Brainstorm extends ConversationCommon {
   type: ConversationType.BRAINSTORM
-  due: DatetimeLocalInputString
+  due: ISODate
 }
 
 export type OwnerAgenda = {
@@ -88,7 +88,7 @@ export type CollabAgenda = {
   setting: Agency.COLLAB
   decision: Agency
   items: AgendaItem[]
-  due: DatetimeLocalInputString
+  due: ISODate
 }
 export type Agenda = OwnerAgenda | CollabAgenda
 
@@ -116,7 +116,7 @@ export type Conversation = Discussion | Meeting | Question | Announcement | Poll
 
 export type Message = Doc & {
   conversationId: string
-  created: DatetimeLocalInputString
+  created: ISODate
   authorId: string
   type: MessageType
   text: string
