@@ -2,6 +2,7 @@
 import { useKoreroStore } from '@/stores/korero'
 import { bzr } from '@/bazaar'
 import { RouterLink } from 'vue-router'
+import LogoIconSVG from './components/LogoIconSVG.vue'
 
 const koreroStore = useKoreroStore()
 koreroStore.autoSignIn()
@@ -22,7 +23,9 @@ function logOut(): void {
 <template>
   <div class="navbar bg-base-100">
     <div class="flex-1">
-      <RouterLink :to="{ name: 'home' }" class="btn btn-ghost text-xl">Korero</RouterLink>
+      <RouterLink :to="{ name: 'home' }" class="btn btn-ghost text-xl"
+        ><LogoIconSVG width="36px" /> Korero</RouterLink
+      >
     </div>
     <div class="flex-none">
       <ul class="menu menu-horizontal px-1">
@@ -39,7 +42,7 @@ function logOut(): void {
           <button @click="logOut">Sign out</button>
         </li>
         <li v-else>
-          <button @click="login">Log in with Bazaar</button>
+          <button @click="login" class="btn btn-accent btn-sm">Log in with Bazaar</button>
         </li>
       </ul>
     </div>
@@ -47,6 +50,22 @@ function logOut(): void {
   <div v-if="koreroStore.authenticated" class="container mx-auto mb-32 p-6">
     <RouterView />
   </div>
+  <div v-else>
+    <div class="text-center px-4 py-24">
+      <p>Log in with Bazaar to get started</p>
+    </div>
+  </div>
+  <footer class="footer px-8 py-4">
+    <div class="grid-flow-col items-center">
+      <LogoIconSVG width="36px" />
+      <div>
+        <div>
+          <strong>&copy; {{ new Date().getFullYear() }} Korero</strong>
+        </div>
+        <div>Communicate effectively with your team.</div>
+      </div>
+    </div>
+  </footer>
 </template>
 
 <style scoped></style>

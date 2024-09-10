@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
 import HeadingOne from '@/components/HeadingOne.vue'
+import ManageTeam from '@/components/ManageTeam.vue'
 
 const koreroStore = useKoreroStore()
 </script>
@@ -10,6 +11,7 @@ const koreroStore = useKoreroStore()
     <HeadingOne class="pb-8">Settings</HeadingOne>
     <template v-if="koreroStore.config">
       <div><span class="font-bold">Team ID:</span> {{ koreroStore.config.currentTeam }}</div>
+      <ManageTeam />
     </template>
   </div>
 </template>

@@ -59,39 +59,6 @@ function label(teamId: string) {
     </div>
 
     <div v-else>
-      <button @click="showSwitchTeam = true" class="btn btn-accent">Switch team</button>
-      <div v-if="showSwitchTeam">
-        <p class="font-bold">{{ user.name }}</p>
-        <ul>
-          <li>
-            Just me {{ label(user.id) }}
-            <button
-              v-if="config.currentTeam !== user.id"
-              @click="chooseTeam(user.id)"
-              class="btn btn-accent"
-            >
-              Choose team
-            </button>
-          </li>
-        </ul>
-        <div v-for="org in orgs" :key="org.id">
-          <p class="font-bold">{{ org.name }}</p>
-          <ul>
-            <li v-for="team in org.teams" :key="team.id">
-              {{ team.name }} {{ label(team.id) }}
-              <button
-                v-if="config.currentTeam !== team.id"
-                @click="chooseTeam(team.id)"
-                class="btn btn-accent"
-              >
-                Choose team
-              </button>
-            </li>
-          </ul>
-        </div>
-
-        <button @click="showSwitchTeam = false" class="btn btn-accent">Cancel</button>
-      </div>
       <div class="flex gap-4 justify-between items-center">
         <HeadingOne>Channels</HeadingOne>
         <div>

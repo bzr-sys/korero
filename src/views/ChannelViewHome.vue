@@ -73,7 +73,7 @@ watch(route, async (newRoute) => {
     </div>
     <div>
       <HeadingTwo class="pt-1 pb-4">Conversation types</HeadingTwo>
-      <ul class="menu bg-base-200 rounded-box">
+      <ul class="menu bg-slate-50 border-slate-200 border rounded-box">
         <li>
           <RouterLink
             :to="{ name: 'channel', params: { channelId } }"
