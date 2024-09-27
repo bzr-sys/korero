@@ -6,13 +6,18 @@ import {
   arrayMirrorSubscribeListener,
   type BazaarMessage,
   type DeepPartial,
-  type Doc,
   type User,
-  type Team,
-  type Org
+  type Org,
+  type PermissionGroup,
+  CollectionAPI,
+  GranteeType,
+  PermissionType,
+  noSharingNotification,
+  BazaarContext
 } from '@bzr/bazaar'
 import { type Channel, type Config, type Conversation, type Message } from '@/types'
 import { dateStrToISO } from '@/date'
+import router from '@/router'
 
 const CONFIG_COLLECTION = 'configs'
 const CHANNEL_COLLECTION = 'channels'
@@ -26,28 +31,48 @@ const emptyUser: User = {
   handle: ''
 }
 
-type OrgTeam = Org & {
-  teams: Team[]
+const emptyGroup: PermissionGroup = {
+  id: '',
+  label: '',
+  members: []
 }
 
 export const useKoreroStore = defineStore('korero', () => {
   const loaded = ref(false)
   const authenticated = ref(false)
-  const config = ref<Config | undefined>(undefined)
-  const user = ref<User>(emptyUser)
-  const teams = ref<Team[]>([])
-  const orgs = ref<OrgTeam[]>([])
 
-  /** A list of users, e.g. those who have authored messages  */
-  const users: Ref<User[]> = ref([])
+  const state: Ref<
+    | {
+        config: Config
+        bzr: BazaarContext
+        channelCollection: CollectionAPI<Channel>
+        conversationCollection: CollectionAPI<Conversation>
+        messageCollection: CollectionAPI<Message>
+      }
+    | undefined
+  > = ref(undefined)
+
+  const user: Ref<User> = ref(emptyUser)
+  const orgs: Ref<Org[]> = ref([])
+  const users: Ref<{ [key: string]: User }> = ref({})
+  const groups: Ref<{ [key: string]: PermissionGroup }> = ref({})
 
   function getUser(id: string): User {
-    const user = users.value.find((u) => u.id === id)
+    const user = users.value[id]
     if (user) {
       return user
     }
     cacheUser(id)
     return emptyUser
+  }
+
+  function getGroup(id: string): PermissionGroup {
+    const group = groups.value[id]
+    if (group) {
+      return group
+    }
+    cacheGroup(id)
+    return emptyGroup
   }
 
   const configCollection = bzr.collection<Config>(CONFIG_COLLECTION)
@@ -62,28 +87,17 @@ export const useKoreroStore = defineStore('korero', () => {
         // Get config
         const c = await configCollection.getAll()
         if (c.length) {
-          config.value = c[0]
+          setState(c[0])
 
           // Get channels
           syncChannels()
+          syncConversations()
         }
 
-        // Get teams
-        teams.value = await bzr.org.teams.list()
-        const orgIds: { [key: string]: boolean } = {}
-        for (const team of teams.value) {
-          if (team.ownerType === 'org') {
-            orgIds[team.owner] = true
-          }
-        }
-        for (const orgId in orgIds) {
-          // TODO account for exceptions
-          const o = await bzr.org.getOrg({ orgId: orgId })
-          orgs.value.push({
-            ...o,
-            teams: teams.value.filter((t) => t.owner === o.id)
-          })
-        }
+        // Get orgs
+        // @ts-ignore
+        orgs.value = await bzr.orgs.list()
+        console.log(orgs.value)
 
         authenticated.value = true
         loaded.value = true
@@ -95,61 +109,163 @@ export const useKoreroStore = defineStore('korero', () => {
     }
   }
 
+  function setState(config: Config) {
+    const bzrCtx = bzr.createContext({ ownerId: config.currentTeam })
+    state.value = {
+      config: config,
+      bzr: bzrCtx,
+      channelCollection: bzrCtx.collection<Channel>(CHANNEL_COLLECTION, {
+        onCreate: async () => {
+          // create permissions for group
+          bzrCtx.permissions.create(
+            {
+              collectionName: CHANNEL_COLLECTION,
+              granteeType: GranteeType.ORG,
+              granteeId: config.currentTeam,
+              types: [
+                PermissionType.INSERT,
+                PermissionType.UPDATE,
+                PermissionType.DELETE,
+                PermissionType.READ
+              ],
+              filter: { group: { $in: '$groups' } }
+            },
+            noSharingNotification
+          )
+        }
+      }),
+      conversationCollection: bzrCtx.collection<Conversation>(CONVERSATION_COLLECTION, {
+        onCreate: async () => {
+          // create permissions for group
+          bzrCtx.permissions.create(
+            {
+              collectionName: CONVERSATION_COLLECTION,
+              granteeType: GranteeType.ORG,
+              granteeId: config.currentTeam,
+              types: [
+                PermissionType.INSERT,
+                PermissionType.UPDATE,
+                PermissionType.DELETE,
+                PermissionType.READ
+              ],
+              filter: { group: { $in: '$groups' } }
+            },
+            noSharingNotification
+          )
+        }
+      }),
+      messageCollection: bzrCtx.collection<Message>(MESSAGE_COLLECTION, {
+        onCreate: async () => {
+          // create permissions for group
+          bzrCtx.permissions.create(
+            {
+              collectionName: MESSAGE_COLLECTION,
+              granteeType: GranteeType.ORG,
+              granteeId: config.currentTeam,
+              types: [
+                PermissionType.INSERT,
+                PermissionType.UPDATE,
+                PermissionType.DELETE,
+                PermissionType.READ
+              ],
+              filter: { group: { $in: '$groups' } }
+            },
+            noSharingNotification
+          )
+        }
+      })
+    }
+    // Reset
+    channels.value = []
+    conversations.value = []
+    messages.value = []
+    currentChannel.value = undefined
+    currentConversation.value = undefined
+    groups.value = {}
+  }
+
   async function setTeam(teamId: string) {
-    if (config.value) {
-      if (!config.value.teams.includes(teamId)) {
-        config.value.teams.push(teamId)
+    let config
+    if (state.value) {
+      if (!state.value.config.teams.includes(teamId)) {
+        state.value.config.teams.push(teamId)
       }
-      config.value.currentTeam = teamId
-      await configCollection.updateOne(config.value.id, config.value)
+      state.value.config.currentTeam = teamId
+      await configCollection.updateOne(state.value.config.id, state.value.config)
+      config = state.value.config
     } else {
       const newConfig = { currentTeam: teamId, teams: [teamId] }
       const configId = await configCollection.insertOne(newConfig)
-      config.value = { id: configId, ...newConfig }
+      config = { id: configId, ...newConfig }
     }
+    router.push({ name: 'home' })
+    setState(config)
     await syncChannels()
+    await syncConversations()
   }
 
   //
   // Load and manage channels in a team
   //
 
-  const channels = ref<Channel[]>([])
-  let unsubscribeChannels: (() => Promise<BazaarMessage>) | undefined = undefined
-  // let channelCollection = undefined;
-  async function syncChannels() {
-    if (!config.value) {
-      channels.value = []
-    }
-    if (unsubscribeChannels) {
-      unsubscribeChannels()
-      unsubscribeChannels = undefined
-    }
+  const channels: Ref<Channel[]> = ref([])
 
-    unsubscribeChannels = await bzr
-      .collection<Channel>(CHANNEL_COLLECTION, { teamId: config.value?.currentTeam })
-      .subscribeAll({}, arrayMirrorSubscribeListener<Channel>(channels.value))
+  async function syncChannels() {
+    if (!state.value) {
+      return
+    }
+    channels.value = await state.value.channelCollection.getAll()
+
     return
   }
 
-  async function createChannel(name: string): Promise<string> {
-    if (!config.value) {
+  async function createChannel(name: string, members: string[]): Promise<string> {
+    if (!state.value) {
       return ''
     }
-    return bzr
-      .collection<Channel>(CHANNEL_COLLECTION, { teamId: config.value!.currentTeam })
-      .insertOne({ name: name, description: '', archived: false })
+    // Create group
+    const newGroup = { label: 'channel-' + name, members: members }
+    // @ts-ignore
+    const { id } = await state.value.bzr.permissions.groups.create(newGroup)
+    groups.value[id] = { id, ...newGroup }
+
+    return state.value.channelCollection.insertOne({
+      name: name,
+      description: '',
+      archived: false,
+      group: id
+    })
   }
 
   //
   // Load and manage conversations in a channel
   //
 
-  const currentChannel = ref<Channel | undefined>(undefined)
-  const conversations = ref<Conversation[]>([])
+  const conversations: Ref<Conversation[]> = ref([])
   let unsubscribeConversations: (() => Promise<BazaarMessage>) | undefined = undefined
 
+  async function syncConversations() {
+    if (!state.value) {
+      return
+    }
+
+    if (unsubscribeConversations) {
+      unsubscribeConversations()
+      unsubscribeConversations = undefined
+    }
+
+    conversations.value = []
+    unsubscribeConversations = await state.value.conversationCollection.subscribeAll(
+      {},
+      arrayMirrorSubscribeListener<Conversation>(conversations.value)
+    )
+  }
+
+  const currentChannel: Ref<Channel | undefined> = ref(undefined)
   async function setChannel(id: string) {
+    if (!state.value) {
+      return
+    }
     if (currentChannel.value && currentChannel.value.id === id) {
       return
     }
@@ -158,26 +274,8 @@ export const useKoreroStore = defineStore('korero', () => {
     })
 
     if (!currentChannel.value) {
-      currentChannel.value = await bzr
-        .collection<Channel>(CHANNEL_COLLECTION, { teamId: config.value!.currentTeam })
-        .getOne(id)
+      currentChannel.value = await state.value.channelCollection.getOne(id)
     }
-
-    if (unsubscribeConversations) {
-      unsubscribeConversations()
-      unsubscribeConversations = undefined
-    }
-
-    // Remove conversations before mirroring
-    conversations.value = []
-
-    // TODO how to make sure only members of this channel can read these conversations?
-    unsubscribeConversations = await bzr
-      .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
-      .subscribeAll(
-        { channelId: id },
-        arrayMirrorSubscribeListener<Conversation>(conversations.value)
-      )
   }
 
   function getChannel(id: string): Channel {
@@ -186,16 +284,15 @@ export const useKoreroStore = defineStore('korero', () => {
         id: '',
         name: 'Unknown Channel',
         description: '',
-        archived: false
+        archived: false,
+        group: ''
       }
     )
   }
 
   async function createConversation(conversation: Omit<Conversation, 'id'>) {
-    if (config.value) {
-      return bzr
-        .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
-        .insertOne(conversation)
+    if (state.value) {
+      return state.value.conversationCollection.insertOne(conversation)
     }
   }
 
@@ -203,11 +300,6 @@ export const useKoreroStore = defineStore('korero', () => {
   // Load and manage messages in a conversation
   //
 
-  type MessageTemplate = Doc & {
-    type: string
-    conversationId: string
-    text: string
-  }
   const currentConversation = ref(undefined as Conversation | undefined)
   let unsubscribeConversation: (() => Promise<BazaarMessage>) | undefined = undefined
 
@@ -216,6 +308,9 @@ export const useKoreroStore = defineStore('korero', () => {
   let unsubscribeMessages: (() => Promise<BazaarMessage>) | undefined = undefined
 
   async function setConversation(id: string) {
+    if (!state.value) {
+      return
+    }
     if (currentConversation.value && currentConversation.value.id === id) {
       return
     }
@@ -232,16 +327,14 @@ export const useKoreroStore = defineStore('korero', () => {
     })
 
     if (!currentConversation.value) {
-      currentConversation.value = await bzr
-        .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
-        .getOne(id)
+      currentConversation.value = await state.value.conversationCollection.getOne(id)
     }
 
     setChannel(currentConversation.value.channelId)
 
-    unsubscribeConversation = await bzr
-      .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
-      .subscribeOne(id, { onChange: (_, newDoc) => (currentConversation.value = newDoc) })
+    unsubscribeConversation = await state.value.conversationCollection.subscribeOne(id, {
+      onChange: (_, newDoc) => (currentConversation.value = newDoc)
+    })
 
     if (unsubscribeMessages) {
       unsubscribeMessages()
@@ -250,41 +343,81 @@ export const useKoreroStore = defineStore('korero', () => {
 
     // TODO how to make sure only members of this channel can read these messages?
     messages.value = []
-    unsubscribeMessages = await bzr
-      .collection<Message>(MESSAGE_COLLECTION, { teamId: config.value!.currentTeam })
-      .subscribeAll({ conversationId: id }, arrayMirrorSubscribeListener<Message>(messages.value))
+    unsubscribeMessages = await state.value.messageCollection.subscribeAll(
+      { conversationId: id },
+      arrayMirrorSubscribeListener<Message>(messages.value)
+    )
   }
 
-  async function createMessage(message: Omit<Message, 'id' | 'created' | 'authorId'>) {
-    if (config.value) {
-      const newMessage = {
-        ...message,
-        created: dateStrToISO(),
-        authorId: user.value.id
-        // authorId: 'fa3b7079-daab-4d28-a356-8468a17434cd'
-      }
-
-      return bzr
-        .collection<Message>(MESSAGE_COLLECTION, { teamId: config.value!.currentTeam })
-        .insertOne(newMessage)
+  async function createMessage(message: Omit<Message, 'id' | 'created' | 'authorId' | 'group'>) {
+    if (!state.value || !currentChannel.value) {
+      return
     }
+    const newMessage = {
+      ...message,
+      created: dateStrToISO(),
+      authorId: user.value.id,
+      group: currentChannel.value.group
+    }
+
+    return state.value.messageCollection.insertOne(newMessage)
   }
 
   async function cacheUser(userId: string): Promise<void> {
-    const cachedUser = users.value.find((u) => u.id === userId)
+    const cachedUser = users.value[userId]
     if (!cachedUser) {
       const fetchedUser = await bzr.social.getUser({ userId })
       if (fetchedUser) {
-        users.value.push(fetchedUser)
+        users.value[fetchedUser.id] = fetchedUser
       }
+    }
+  }
+
+  async function cacheGroup(groupId: string): Promise<void> {
+    if (!state.value) {
+      return
+    }
+    const cachedGroup = groups.value[groupId]
+    if (!cachedGroup) {
+      // @ts-ignore
+      const fetchedGroup = await state.value.bzr.permissions.groups.get(groupId)
+      if (fetchedGroup) {
+        groups.value[fetchedGroup.id] = fetchedGroup
+      }
+    }
+  }
+
+  async function addGroupMember(groupId: string, memberId: string) {
+    if (!state.value) {
+      return
+    }
+    // @ts-ignore
+    await state.value.bzr.permissions.groups.addMember(groupId, memberId)
+    // @ts-ignore
+    const newGroup = await state.value.bzr.permissions.groups.get(groupId)
+
+    if (newGroup) {
+      groups.value[newGroup.id] = newGroup
+    }
+  }
+
+  async function removeGroupMember(groupId: string, memberId: string) {
+    if (!state.value) {
+      return
+    }
+    // @ts-ignore
+    await state.value.bzr.permissions.groups.removeMember(groupId, memberId)
+    // @ts-ignore
+    const newGroup = await state.value.bzr.permissions.groups.get(groupId)
+
+    if (newGroup) {
+      groups.value[newGroup.id] = newGroup
     }
   }
 
   async function updateConversation(id: string, doc: DeepPartial<Conversation>) {
-    if (config.value) {
-      return bzr
-        .collection<Conversation>(CONVERSATION_COLLECTION, { teamId: config.value!.currentTeam })
-        .updateOne(id, doc)
+    if (state.value) {
+      return state.value.conversationCollection.updateOne(id, doc)
     }
   }
 
@@ -292,13 +425,18 @@ export const useKoreroStore = defineStore('korero', () => {
     user,
     getUser,
     users,
-    config,
+    getGroup,
+    addGroupMember,
+    removeGroupMember,
+    groups,
+    state,
     orgs,
     loaded,
     authenticated,
     autoSignIn,
 
     // Org view
+    syncChannels,
     channels,
     setTeam,
     createChannel,
@@ -308,6 +446,8 @@ export const useKoreroStore = defineStore('korero', () => {
     conversations,
     setChannel,
     getChannel,
+    // addMember,
+
     createConversation,
 
     // Conversation view

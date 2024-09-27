@@ -2,13 +2,37 @@
 import { useKoreroStore } from '@/stores/korero'
 import BaseCard from '@/components/BaseCard.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
+import ManageTeam from '@/components/ManageTeam.vue'
+import FormatDateString from '@/components/FormatDateString.vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { ref, type Ref } from 'vue'
 
 const koreroStore = useKoreroStore()
 
-const { config, channels, orgs, user } = storeToRefs(koreroStore)
-if (!config.value) {
+const { state, channels, conversations } = storeToRefs(koreroStore)
+
+// Sync on each visit since subscription does not work: https://github.com/bzr-sys/bazaar-server/issues/181
+koreroStore.syncChannels()
+
+const orderedConversations = computed(() => {
+  return conversations.value
+    .map((c) => c)
+    .sort((a, b) => {
+      return new Date(b.created).getTime() - new Date(a.created).getTime()
+    })
+    .slice(0, 10)
+})
+
+function channelName(channelId: string) {
+  for (const channel of channels.value) {
+    if (channel.id === channelId) {
+      return channel.name
+    }
+  }
+  return 'unknown channel'
+}
+
+if (!state.value) {
   // TODO:
   // * get all teams (or just org?)
   // * let user choose a team/org to build
@@ -18,66 +42,61 @@ if (!config.value) {
   // 5. Set teams with channels and default team (the first in list) in config. Set up view.
   // 6. If no teams with channels are found, show choose team to create channels view.
 }
-
-function chooseTeam(teamId: string) {
-  koreroStore.setTeam(teamId)
-}
-
-const showSwitchTeam: Ref<boolean> = ref(false)
-function label(teamId: string) {
-  if (config.value?.currentTeam == teamId) {
-    return 'current'
-  }
-  if (config.value?.teams.includes(teamId)) {
-    return 'active'
-  }
-  return 'unused'
-}
 </script>
 
 <template>
   <main>
-    <div v-if="!config">
+    <div v-if="!state">
       <HeadingOne class="pb-6">Get started</HeadingOne>
-
-      <p class="font-bold">{{ user.name }}</p>
-      <ul>
-        <li>
-          Just me
-          <button @click="chooseTeam(user.id)" class="btn btn-accent">Choose team</button>
-        </li>
-      </ul>
-      <div v-for="org in orgs" :key="org.id">
-        <p class="font-bold">{{ org.name }}</p>
-        <ul>
-          <li v-for="team in org.teams" :key="team.id">
-            {{ team.name }}
-            <button @click="chooseTeam(team.id)" class="btn btn-accent">Choose team</button>
-          </li>
-        </ul>
-      </div>
+      <ManageTeam />
     </div>
 
     <div v-else>
-      <div class="flex gap-4 justify-between items-center">
-        <HeadingOne>Channels</HeadingOne>
+      <div class="grid grid-cols-4 gap-4">
         <div>
-          <RouterLink :to="{ name: 'newChannel' }" class="btn btn-sm btn-accent"
-            >Create a new channel</RouterLink
-          >
+          <div class="flex gap-4 items-center">
+            <HeadingOne>Channels</HeadingOne>
+            <RouterLink :to="{ name: 'newChannel' }" class="btn btn-sm btn-accent">+</RouterLink>
+          </div>
+
+          <p v-if="channels.length === 0" class="text-center py-12">
+            Create a channel to get started.
+          </p>
+
+          <div class="grid gap-2 py-4">
+            <BaseCard v-for="channel in channels" :key="channel.id">
+              <h2 class="card-title">
+                <RouterLink :to="{ name: 'channel', params: { channelId: channel.id } }">{{
+                  channel.name
+                }}</RouterLink>
+              </h2>
+            </BaseCard>
+          </div>
         </div>
-      </div>
+        <div class="col-span-3">
+          <HeadingOne>Conversations</HeadingOne>
+          <p v-if="conversations.length === 0" class="text-center py-12">
+            No recent conversations.
+          </p>
 
-      <p v-if="channels.length === 0" class="text-center py-12">Create a channel to get started.</p>
-
-      <div class="grid grid-cols-3 gap-4 py-4">
-        <BaseCard v-for="channel in channels" :key="channel.id" class="mb-4">
-          <h2 class="card-title">
-            <RouterLink :to="{ name: 'channel', params: { channelId: channel.id } }">{{
-              channel.name
-            }}</RouterLink>
-          </h2>
-        </BaseCard>
+          <div class="grid gap-4 py-4">
+            <BaseCard v-for="conversation in orderedConversations" :key="conversation.id">
+              <div class="badge badge-accent">
+                {{ conversation.type }} in {{ channelName(conversation.channelId) }}
+              </div>
+              <h2 class="card-title">
+                <RouterLink
+                  :to="{ name: 'conversation', params: { conversationId: conversation.id } }"
+                  >{{ conversation.title }}</RouterLink
+                >
+              </h2>
+              <div class="italic text-xs">
+                By {{ koreroStore.getUser(conversation.authorId).name }} on
+                <FormatDateString :dateString="conversation.created" :defaultCss="false" />
+              </div>
+            </BaseCard>
+          </div>
+        </div>
       </div>
     </div>
   </main>

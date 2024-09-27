@@ -3,6 +3,9 @@ import { useKoreroStore } from '@/stores/korero'
 import { bzr } from '@/bazaar'
 import { RouterLink } from 'vue-router'
 import LogoIconSVG from './components/LogoIconSVG.vue'
+import { storeToRefs } from 'pinia'
+import { computed } from 'vue'
+import type { ComputedRef } from 'vue'
 
 const koreroStore = useKoreroStore()
 koreroStore.autoSignIn()
@@ -18,6 +21,22 @@ function login(): void {
 function logOut(): void {
   bzr.logOut()
 }
+
+const { state, orgs, user } = storeToRefs(koreroStore)
+
+const currentOrg: ComputedRef<string> = computed(() => {
+  if (!state.value) {
+    return 'Choose org'
+  }
+  if (user.value.id === state.value.config.currentTeam) {
+    return user.value.name
+  }
+  const org = orgs.value.filter((o) => o.id === state.value!.config.currentTeam)
+  if (org.length > 0) {
+    return org[0].name
+  }
+  return 'Switch org'
+})
 </script>
 
 <template>
@@ -29,7 +48,10 @@ function logOut(): void {
     </div>
     <div class="flex-none">
       <ul class="menu menu-horizontal px-1">
-        <li v-if="koreroStore.authenticated">
+        <li v-if="state">
+          <RouterLink :to="{ name: 'settings' }" class="font-bold">{{ currentOrg }}</RouterLink>
+        </li>
+        <!-- <li v-if="koreroStore.authenticated">
           <details>
             <summary>Menu</summary>
             <ul class="bg-base-100 rounded-t-none p-2">
@@ -37,7 +59,7 @@ function logOut(): void {
               <li><RouterLink :to="{ name: 'settings' }">Settings</RouterLink></li>
             </ul>
           </details>
-        </li>
+        </li> -->
         <li v-if="koreroStore.authenticated">
           <button @click="logOut">Sign out</button>
         </li>
