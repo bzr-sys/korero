@@ -10,7 +10,11 @@ export type Channel = Doc & {
   description: string
   archived: boolean
   // type: "team", // vs project
-  // group: groupId, // needed for permissions & to show channel members if not using team scoped channels
+  group: string // needed for permissions & to show channel members if not using team scoped channels
+
+  // workaround
+  // members: string[]
+  // guests: string[] // read-only members? clients? users for individual permissions (just one conversation)
 }
 
 /**
@@ -31,7 +35,7 @@ export type ConversationCommon = Doc & {
   title: string
   authorId: string
   archived: boolean
-  created: ISODate
+  created: DatetimeLocalInputString
   // TODO: how about edits?
 
   //
@@ -40,7 +44,7 @@ export type ConversationCommon = Doc & {
   message: string
 
   // Needed for permissions. This is problematic as it should be evident due to channel association.
-  // group: groupId,
+  group: string
 }
 
 export enum ConversationType {
@@ -57,7 +61,7 @@ export interface Discussion extends ConversationCommon {
 }
 export interface Meeting extends ConversationCommon {
   type: ConversationType.MEETING
-  date: ISODate
+  date: DatetimeLocalInputString
   agenda: Agenda
   notes?: string
 }
@@ -73,11 +77,11 @@ export interface Poll extends ConversationCommon {
   type: ConversationType.POLL
   multipleAnswers: boolean
   items: PollItem[]
-  due: ISODate
+  due: DatetimeLocalInputString
 }
 export interface Brainstorm extends ConversationCommon {
   type: ConversationType.BRAINSTORM
-  due: ISODate
+  due: DatetimeLocalInputString
 }
 
 export type OwnerAgenda = {
@@ -88,7 +92,7 @@ export type CollabAgenda = {
   setting: Agency.COLLAB
   decision: Agency
   items: AgendaItem[]
-  due: ISODate
+  due: DatetimeLocalInputString
 }
 export type Agenda = OwnerAgenda | CollabAgenda
 
@@ -116,10 +120,12 @@ export type Conversation = Discussion | Meeting | Question | Announcement | Poll
 
 export type Message = Doc & {
   conversationId: string
-  created: ISODate
+  created: DatetimeLocalInputString
   authorId: string
   type: MessageType
   text: string
+
+  group: string
 }
 
 export enum MessageType {

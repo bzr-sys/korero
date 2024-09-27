@@ -25,6 +25,9 @@ const koreroStore = useKoreroStore()
 koreroStore.setChannel(channelId)
 
 async function createConversation() {
+  if (!koreroStore.currentChannel) {
+    return
+  }
   if (!title.value) {
     return
   }
@@ -43,7 +46,8 @@ async function createConversation() {
     reactions: [],
     message: message.value,
     //
-    type: chosenType.value
+    type: chosenType.value,
+    group: koreroStore.currentChannel.group
   }
   switch (chosenType.value) {
     case ConversationType.MEETING:

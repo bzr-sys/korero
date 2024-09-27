@@ -1,63 +1,69 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
 import { storeToRefs } from 'pinia'
-import { ref } from 'vue'
+import { bzr } from '@/bazaar'
+import HeadingTwo from './HeadingTwo.vue'
 
 const koreroStore = useKoreroStore()
 
-const { config, orgs, user } = storeToRefs(koreroStore)
+const { state, orgs, user } = storeToRefs(koreroStore)
 
-const showSwitchTeam = ref<boolean>(false)
-
-function getTeamStatus(teamId: string) {
-  if (config.value?.currentTeam == teamId) {
-    return 'current'
-  }
-  if (config.value?.teams.includes(teamId)) {
-    return 'active'
-  }
-  return 'unused'
-}
-
-function chooseTeam(teamId: string) {
-  koreroStore.setTeam(teamId)
+function openModal() {
+  // @ts-ignore
+  bzr.orgs.openModal()
 }
 </script>
 
 <template>
-  <div v-if="config" class="py-8">
-    <button @click="showSwitchTeam = true" class="btn btn-accent btn-sm">Switch team</button>
-    <div v-if="showSwitchTeam" class="pt-4">
-      <p class="font-bold">{{ user.name }}</p>
-      <ul>
-        <li>
-          Just me {{ getTeamStatus(user.id) }}
-          <button
-            v-if="config.currentTeam !== user.id"
-            @click="chooseTeam(user.id)"
-            class="btn btn-accent btn-sm"
-          >
-            Choose team
-          </button>
-        </li>
-      </ul>
-      <div v-for="org in orgs" :key="org.id" class="pt-4">
-        <p class="font-bold">{{ org.name }}</p>
-        <ul>
-          <li v-for="team in org.teams" :key="team.id">
-            {{ team.name }} {{ getTeamStatus(team.id) }}
-            <button
-              v-if="config.currentTeam !== team.id"
-              @click="chooseTeam(team.id)"
-              class="btn btn-accent btn-sm"
-            >
-              Choose team
-            </button>
-          </li>
-        </ul>
-      </div>
+  <HeadingTwo class="pb-4">Pesonal</HeadingTwo>
+  <div>
+    <span class="font-bold pr-2">{{ user.name }}</span>
+    <button
+      v-if="!state || state.config.currentTeam !== user.id"
+      @click="koreroStore.setTeam(user.id)"
+      class="btn btn-accent"
+    >
+      Choose
+    </button>
+    <span v-else class="btn btn-xs btn-primary">current</span>
+  </div>
 
-      <button @click="showSwitchTeam = false" class="btn btn-sm">Cancel</button>
+  <HeadingTwo class="py-4">
+    Organizations
+    <button class="btn btn-sm" @click="openModal()">Manage orgs</button>
+  </HeadingTwo>
+
+  <div v-for="org in orgs" :key="org.id">
+    <div>
+      <span class="font-bold pr-2">{{ org.name }}</span>
+      <template v-if="!org.active">
+        <button
+          v-if="org.admins.includes(user.id)"
+          @click="openModal()"
+          class="btn btn-xs btn-warning"
+        >
+          Get Subscription
+        </button>
+        <span v-else class="btn btn-xs btn-warning">inactive</span>
+      </template>
+
+      <span
+        v-else-if="state && org.primaryTeam.id === state.config.currentTeam"
+        class="btn btn-xs btn-primary"
+        >current</span
+      >
+
+      <button
+        v-else-if="state && state.config.teams.includes(org.primaryTeam.id)"
+        @click="koreroStore.setTeam(org.primaryTeam.id)"
+        class="btn btn-xs btn-accent"
+      >
+        Return to this org
+      </button>
+
+      <button v-else @click="koreroStore.setTeam(org.primaryTeam.id)" class="btn btn-xs btn-accent">
+        Start with this org
+      </button>
     </div>
   </div>
 </template>

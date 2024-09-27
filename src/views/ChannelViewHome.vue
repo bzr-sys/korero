@@ -3,29 +3,77 @@ import ChannelBreadcrumbNav from '@/components/ChannelBreadcrumbNav.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
 import FormatDateString from '@/components/FormatDateString.vue'
+import ManageChannelMembers from '@/components/ManageChannelMembers.vue'
 import HeadingTwo from '@/components/HeadingTwo.vue'
 import { useRoute } from 'vue-router'
 import { useKoreroStore } from '@/stores/korero'
 import { ConversationType } from '@/types'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
+import { storeToRefs } from 'pinia'
 
 const route = useRoute()
 const koreroStore = useKoreroStore()
+const { currentChannel, groups, user, conversations } = storeToRefs(koreroStore)
 
 const channelId = route.params.channelId as string
+
+const channelConversations = computed(() => {
+  return conversations.value.filter((c) => c.channelId === channelId)
+})
 
 const conversationTypeParam = ref(route.params.conversationType as ConversationType)
 
 const filteredConversations = computed(() => {
   if (!conversationTypeParam.value) {
-    return koreroStore.conversations
+    return channelConversations.value
   }
-  return koreroStore.conversations.filter((c) => c.type === conversationTypeParam.value)
+  return channelConversations.value.filter((c) => c.type === conversationTypeParam.value)
 })
 
 watch(route, async (newRoute) => {
   conversationTypeParam.value = newRoute.params.conversationType as ConversationType
 })
+
+function userName(id: string) {
+  const user = koreroStore.getUser(id)
+  if (user.id) {
+    return user.name
+  }
+  return id
+}
+
+if (currentChannel.value) {
+  koreroStore.getGroup(currentChannel.value.group)
+}
+
+const members: ComputedRef<string[]> = computed(() => {
+  if (!currentChannel.value) {
+    return []
+  }
+  if (groups.value[currentChannel.value.group]) {
+    return groups.value[currentChannel.value.group].members
+  }
+  koreroStore.getGroup(currentChannel.value.group)
+  return []
+})
+
+const manageMembers: Ref<boolean> = ref(false)
+
+function addMember(id: string) {
+  console.log('add member', id)
+  if (currentChannel.value) {
+    koreroStore.addGroupMember(currentChannel.value.group, id)
+  }
+  manageMembers.value = false
+}
+function removeMember(id: string) {
+  if (currentChannel.value) {
+    koreroStore.removeGroupMember(currentChannel.value.group, id)
+  }
+  manageMembers.value = false
+}
+
+console.log(groups)
 </script>
 
 <template>
@@ -72,6 +120,25 @@ watch(route, async (newRoute) => {
       </div>
     </div>
     <div>
+      <HeadingTwo class="pt-1 pb-4">
+        Members
+        <div v-if="manageMembers">
+          <button class="btn btn-sm" @click="manageMembers = false">Done</button>
+        </div>
+
+        <button v-else class="btn btn-sm" @click="manageMembers = true">Manange</button>
+      </HeadingTwo>
+      <ManageChannelMembers
+        v-if="manageMembers"
+        :initial-members="members.filter((id) => id !== user.id)"
+        @update:add-member="addMember"
+        @update:remove-member="removeMember"
+      ></ManageChannelMembers>
+      <div v-else>
+        <span v-for="member in members" :key="member" class="badge badge-secondary badge-sm mr-2">{{
+          userName(member)
+        }}</span>
+      </div>
       <HeadingTwo class="pt-1 pb-4">Conversation types</HeadingTwo>
       <ul class="menu bg-slate-50 border-slate-200 border rounded-box">
         <li>

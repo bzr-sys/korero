@@ -8,9 +8,8 @@ const koreroStore = useKoreroStore()
 
 <template>
   <div class="max-w-xl mx-auto">
-    <HeadingOne class="pb-8">Settings</HeadingOne>
-    <template v-if="koreroStore.config">
-      <div><span class="font-bold">Team ID:</span> {{ koreroStore.config.currentTeam }}</div>
+    <HeadingOne class="pb-8">Org Management</HeadingOne>
+    <template v-if="koreroStore.state">
       <ManageTeam />
     </template>
   </div>
