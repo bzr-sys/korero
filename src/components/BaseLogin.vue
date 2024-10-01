@@ -10,7 +10,7 @@ function login(): void {
 </script>
 
 <template>
-  <div class="grid min-h-full grid-rows-[auto_1fr_auto] px-4 max-w-7xl mx-auto">
+  <div class="grid min-h-full grid-rows-[auto_1fr_auto] px-8 max-w-7xl mx-auto">
     <header class="sticky flex py-8">
       <a href="https://koreroapp.com/">
         <LogoTextSVG width="130px" />
