@@ -45,59 +45,55 @@ if (!state.value) {
 </script>
 
 <template>
-  <main>
-    <div v-if="!state">
-      <HeadingOne class="pb-6">Get started</HeadingOne>
-      <ManageTeam />
-    </div>
+  <div v-if="!state">
+    <HeadingOne class="pb-6">Get started</HeadingOne>
+    <ManageTeam />
+  </div>
 
-    <div v-else>
-      <div class="grid grid-cols-4 gap-4">
-        <div>
-          <div class="flex gap-4 items-center">
-            <HeadingOne>Channels</HeadingOne>
-            <RouterLink :to="{ name: 'newChannel' }" class="btn btn-sm btn-accent">+</RouterLink>
-          </div>
-
-          <p v-if="channels.length === 0" class="text-center py-12">
-            Create a channel to get started.
-          </p>
-
-          <div class="grid gap-2 py-4">
-            <BaseCard v-for="channel in channels" :key="channel.id">
-              <h2 class="card-title">
-                <RouterLink :to="{ name: 'channel', params: { channelId: channel.id } }">{{
-                  channel.name
-                }}</RouterLink>
-              </h2>
-            </BaseCard>
-          </div>
+  <div v-else>
+    <div class="grid grid-cols-4 gap-4">
+      <div>
+        <div class="flex gap-4 items-center">
+          <HeadingOne>Channels</HeadingOne>
+          <RouterLink :to="{ name: 'newChannel' }" class="btn btn-sm btn-accent">+</RouterLink>
         </div>
-        <div class="col-span-3">
-          <HeadingOne>Conversations</HeadingOne>
-          <p v-if="conversations.length === 0" class="text-center py-12">
-            No recent conversations.
-          </p>
 
-          <div class="grid gap-4 py-4">
-            <BaseCard v-for="conversation in orderedConversations" :key="conversation.id">
-              <div class="badge badge-accent">
-                {{ conversation.type }} in {{ channelName(conversation.channelId) }}
-              </div>
-              <h2 class="card-title">
-                <RouterLink
-                  :to="{ name: 'conversation', params: { conversationId: conversation.id } }"
-                  >{{ conversation.title }}</RouterLink
-                >
-              </h2>
-              <div class="italic text-xs">
-                By {{ koreroStore.getUser(conversation.authorId).name }} on
-                <FormatDateString :dateString="conversation.created" :defaultCss="false" />
-              </div>
-            </BaseCard>
-          </div>
+        <p v-if="channels.length === 0" class="text-center py-12">
+          Create a channel to get started.
+        </p>
+
+        <div class="grid gap-2 py-4">
+          <BaseCard v-for="channel in channels" :key="channel.id">
+            <h2 class="card-title">
+              <RouterLink :to="{ name: 'channel', params: { channelId: channel.id } }">{{
+                channel.name
+              }}</RouterLink>
+            </h2>
+          </BaseCard>
+        </div>
+      </div>
+      <div class="col-span-3">
+        <HeadingOne>Conversations</HeadingOne>
+        <p v-if="conversations.length === 0" class="text-center py-12">No recent conversations.</p>
+
+        <div class="grid gap-4 py-4">
+          <BaseCard v-for="conversation in orderedConversations" :key="conversation.id">
+            <div class="badge badge-accent">
+              {{ conversation.type }} in {{ channelName(conversation.channelId) }}
+            </div>
+            <h2 class="card-title">
+              <RouterLink
+                :to="{ name: 'conversation', params: { conversationId: conversation.id } }"
+                >{{ conversation.title }}</RouterLink
+              >
+            </h2>
+            <div class="italic text-xs">
+              By {{ koreroStore.getUser(conversation.authorId).name }} on
+              <FormatDateString :dateString="conversation.created" :defaultCss="false" />
+            </div>
+          </BaseCard>
         </div>
       </div>
     </div>
-  </main>
+  </div>
 </template>
