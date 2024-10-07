@@ -64,8 +64,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <header class="bg-slate-50 border-b border-slate-100 sticky top-0">
-    <div class="px-4 py-2 min-h-12 flex justify-between gap-4 items-center">
+  <header class="bg-slate-50 border-b border-slate-200">
+    <div class="px-4 py-2 h-12 flex justify-between gap-4 items-center">
       <!-- left -->
       <div>
         <RouterLink :to="{ name: 'home' }"> <LogoTextSVG width="100px" /></RouterLink>

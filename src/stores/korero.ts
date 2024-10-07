@@ -1,4 +1,4 @@
-import { ref, type Ref } from 'vue'
+import { computed, ref, type Ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import { bzr } from '@/bazaar'
@@ -52,10 +52,23 @@ export const useKoreroStore = defineStore('korero', () => {
     | undefined
   > = ref(undefined)
 
+  const hasCompletedOnboarding = computed(() => !!state.value)
+
   const user: Ref<User> = ref(emptyUser)
   const orgs: Ref<Org[]> = ref([])
   const users: Ref<{ [key: string]: User }> = ref({})
   const groups: Ref<{ [key: string]: PermissionGroup }> = ref({})
+
+  async function setOrgs() {
+    // @ts-ignore
+    orgs.value = await bzr.orgs.list()
+  }
+
+  const activeOrgs = computed(() => orgs.value.filter((o) => o.active))
+
+  function getOrg(id: string): Org | undefined {
+    return orgs.value.find((o) => o.id === id)
+  }
 
   function getUser(id: string): User {
     const user = users.value[id]
@@ -430,7 +443,11 @@ export const useKoreroStore = defineStore('korero', () => {
     removeGroupMember,
     groups,
     state,
+    hasCompletedOnboarding,
     orgs,
+    activeOrgs,
+    setOrgs,
+    getOrg,
     loaded,
     authenticated,
     autoSignIn,

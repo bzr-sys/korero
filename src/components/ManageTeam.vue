@@ -15,7 +15,7 @@ function openModal() {
 </script>
 
 <template>
-  <HeadingTwo class="pb-4">Pesonal</HeadingTwo>
+  <HeadingTwo class="pb-4">Personal</HeadingTwo>
   <div>
     <span class="font-bold pr-2">{{ user.name }}</span>
     <button
