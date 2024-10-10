@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 import HomeSVG from './HomeSVG.vue'
-import SettingsSVG from './SettingsSVG.vue'
 import { useKoreroStore } from '@/stores/korero'
-import ChannelSVG from './ChannelSVG.vue'
+import { bzr } from '@/bazaar'
+import BazaarLogoIcon from './BazaarLogoIcon.vue'
+import { storeToRefs } from 'pinia'
 
 const route = useRoute()
 
-const { channels } = useKoreroStore()
+const koreroStore = useKoreroStore()
+const { channels, currentChannel } = storeToRefs(koreroStore)
+
+function openOrgModal() {
+  // @ts-ignore
+  bzr.orgs.openModal(null, () => koreroStore.setOrgs())
+}
 </script>
 
 <template>
@@ -25,38 +32,49 @@ const { channels } = useKoreroStore()
           ><HomeSVG width="18px" /> Home</RouterLink
         >
       </li>
-      <li>
-        <RouterLink
-          :to="{ name: 'settings' }"
-          class="flex gap-2 items-center hover:bg-slate-200 w-full px-4 py-2 rounded"
-          :class="{ 'bg-slate-200': route.name === 'settings' }"
-          ><SettingsSVG width="18px" /> Tools</RouterLink
-        >
-      </li>
     </ul>
     <!-- channels nav -->
     <div class="p-4 relative min-h-px flex-1">
       <div class="overflow-y-auto h-full">
-        <h2 class="font-bold px-4 py-2">Channels</h2>
-        <ul>
+        <div class="flex gap-4 justify-between items-center">
+          <h2 class="font-bold px-4 py-2">Channels</h2>
+          <RouterLink :to="{ name: 'newChannel' }" class="font-bold px-2 hover:bg-slate-200 rounded"
+            ><span class="sr-only">Create new channel</span>+</RouterLink
+          >
+        </div>
+        <ul class="[&>li]:mb-px">
+          <!-- Show skeleton when there are no channels -->
+          <template v-if="channels.length === 0">
+            <li aria-hidden="true">
+              <div class="bg-slate-200 opacity-50 rounded h-5 ml-4 mr-8 mb-3"></div>
+            </li>
+            <li aria-hidden="true">
+              <div class="bg-slate-200 opacity-50 rounded h-5 mx-4 mb-3"></div>
+            </li>
+            <li aria-hidden="true">
+              <div class="bg-slate-200 opacity-50 rounded h-5 ml-4 mr-16 mb-3"></div>
+            </li>
+          </template>
+
           <li v-for="channel in channels" :key="channel.id">
             <RouterLink
               :to="{ name: 'channel', params: { channelId: channel.id } }"
               class="flex gap-2 items-center hover:bg-slate-200 w-full px-4 py-1 rounded"
-              ><SettingsSVG width="18px" /> {{ channel.name }}</RouterLink
+              :class="{
+                'bg-slate-200':
+                  route.params.channelId === channel.id || currentChannel?.id === channel.id
+              }"
+              >{{ channel.name }}</RouterLink
             >
           </li>
-          <!-- <li v-for="n in Array.from(Array(200).keys())" :key="n">
-            <a href="#" class="flex gap-2 items-center hover:bg-slate-200 w-full px-4 py-1 rounded"
-              ><ChannelSVG /> Primary</a
-            >
-          </li> -->
         </ul>
       </div>
     </div>
     <!-- bottom sidebar actions -->
     <div class="p-4 border-t border-slate-200">
-      <button class="btn btn-sm btn-block">Invite teammates</button>
+      <button @click="openOrgModal()" class="btn btn-sm btn-block">
+        <BazaarLogoIcon width="12px" /> Invite teammates
+      </button>
     </div>
   </aside>
 </template>

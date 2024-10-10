@@ -2,8 +2,7 @@
 import { useKoreroStore } from '@/stores/korero'
 import HeadingOne from './HeadingOne.vue'
 import BazaarLogoIcon from './BazaarLogoIcon.vue'
-import ManageTeam from './ManageTeam.vue'
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { bzr } from '@/bazaar'
 import { useRoute, useRouter, type RouteLocationNormalizedLoadedGeneric } from 'vue-router'
 import AlertSVG from './AlertSVG.vue'
@@ -44,8 +43,6 @@ function openOrgModal() {
   bzr.orgs.openModal(null, async () => {
     resetNotices()
     await koreroStore.setOrgs()
-    console.log('orgs', orgs)
-    console.log('activeOrgs', activeOrgs)
     if (activeOrgs.value.length > 0) {
       router.push({ name: 'home', query: { step: USE_ORG } })
     } else {
@@ -53,10 +50,14 @@ function openOrgModal() {
     }
   })
 }
+
+function openSocialModal() {
+  bzr.social.openModal()
+}
 </script>
 
 <template>
-  <!-- <ManageTeam /> -->
+  <!-- <ManageWorkspaces /> -->
   <div v-if="!hasCompletedOnboarding" class="text-center py-12 px-4 w-[300px] mx-auto">
     <HeadingOne>Welcome!</HeadingOne>
 
@@ -122,7 +123,7 @@ function openOrgModal() {
         <ul class="flex flex-col gap-2">
           <li v-for="org in activeOrgs" :key="org.id">
             <button @click="koreroStore.setTeam(org.primaryTeam.id)" class="btn btn-md btn-block">
-              {{ org.name }}
+              <div class="truncate h-[15px]">{{ org.name }}</div>
             </button>
           </li>
         </ul>

@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
-import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { ref, watch } from 'vue'
 
 defineProps<{
   size: 'small' | 'medium'
 }>()
 
-const { user } = useKoreroStore()
+const koreroStore = useKoreroStore()
+const { user, state, currentWorkspace } = storeToRefs(koreroStore)
+
 const gravatarUrl = ref('')
 const gravatarExists = ref(false)
 
@@ -19,31 +22,41 @@ async function digestMessage(message: string) {
   return hashHex
 }
 
-if (user.email) {
-  digestMessage(user.email).then(async (digestHex) => {
-    gravatarUrl.value = `https://www.gravatar.com/avatar/${digestHex}?size=100&d=404`
-    const response = await fetch(gravatarUrl.value)
-    gravatarExists.value = response.ok
-    // could cache in local storage
-  })
+async function getUserGravatar() {
+  if (user.value.email) {
+    digestMessage(user.value.email).then(async (digestHex) => {
+      gravatarUrl.value = `https://www.gravatar.com/avatar/${digestHex}?size=100&d=404`
+      const response = await fetch(gravatarUrl.value)
+      gravatarExists.value = response.ok
+      // could cache in local storage
+    })
+  }
 }
+
+watch(
+  state || {},
+  () => {
+    getUserGravatar()
+  },
+  { immediate: true }
+)
 </script>
 
 <template>
+  <div
+    v-if="currentWorkspace?.type === 'org' || !gravatarExists"
+    :class="`bg-warning rounded-full inline-flex justify-center items-center ${size === 'small' && `w-7 h-7`} ${size === 'medium' && `w-12 h-12`}`"
+  >
+    <span :class="`uppercase ${size === 'small' && `text-xs`} ${size === 'medium' && `text-xl`}`">{{
+      currentWorkspace?.handle[0]
+    }}</span>
+  </div>
   <img
-    v-if="gravatarExists"
+    v-else
     :src="gravatarUrl"
     :alt="`Avatar for ${user.name}`"
     :class="`rounded-full ${size === 'small' && `w-7 h-7`} ${size === 'medium' && `w-12 h-12`}`"
   />
-  <div
-    v-else
-    :class="`bg-warning rounded-full inline-flex justify-center items-center ${size === 'small' && `w-7 h-7`} ${size === 'medium' && `w-12 h-12`}`"
-  >
-    <span :class="`uppercase ${size === 'small' && `text-xs`} ${size === 'medium' && `text-xl`}`">{{
-      user.handle[0]
-    }}</span>
-  </div>
 </template>
 
 <style scoped></style>

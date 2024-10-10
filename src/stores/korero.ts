@@ -15,9 +15,8 @@ import {
   noSharingNotification,
   BazaarContext
 } from '@bzr/bazaar'
-import { type Channel, type Config, type Conversation, type Message } from '@/types'
+import type { Channel, Config, Conversation, Message, Workspace } from '@/types'
 import { dateStrToISO } from '@/date'
-import router from '@/router'
 
 const CONFIG_COLLECTION = 'configs'
 const CHANNEL_COLLECTION = 'channels'
@@ -79,6 +78,28 @@ export const useKoreroStore = defineStore('korero', () => {
     return emptyUser
   }
 
+  const currentWorkspace = computed<Workspace | null>(() => {
+    if (!state.value) return null
+    // Active workspace is personal user
+    if (state.value.config.currentTeam === user.value.id) {
+      return {
+        id: user.value.id,
+        name: 'Personal',
+        handle: user.value.handle,
+        type: 'user'
+      }
+    }
+    // Active workspace is an org
+    const activeOrg = getOrg(state.value.config.currentTeam)
+    if (!activeOrg) return null
+    return {
+      id: activeOrg.id,
+      name: activeOrg.name,
+      handle: activeOrg.handle,
+      type: 'org'
+    }
+  })
+
   function getGroup(id: string): PermissionGroup {
     const group = groups.value[id]
     if (group) {
@@ -110,7 +131,6 @@ export const useKoreroStore = defineStore('korero', () => {
         // Get orgs
         // @ts-ignore
         orgs.value = await bzr.orgs.list()
-        console.log(orgs.value)
 
         authenticated.value = true
         loaded.value = true
@@ -211,7 +231,6 @@ export const useKoreroStore = defineStore('korero', () => {
       const configId = await configCollection.insertOne(newConfig)
       config = { id: configId, ...newConfig }
     }
-    router.push({ name: 'home' })
     setState(config)
     await syncChannels()
     await syncConversations()
@@ -242,12 +261,16 @@ export const useKoreroStore = defineStore('korero', () => {
     const { id } = await state.value.bzr.permissions.groups.create(newGroup)
     groups.value[id] = { id, ...newGroup }
 
-    return state.value.channelCollection.insertOne({
+    const channelId = await state.value.channelCollection.insertOne({
       name: name,
       description: '',
       archived: false,
       group: id
     })
+
+    await syncChannels()
+
+    return channelId
   }
 
   //
@@ -301,6 +324,11 @@ export const useKoreroStore = defineStore('korero', () => {
         group: ''
       }
     )
+  }
+
+  function getChannelName(channelId: string): string {
+    const channel = channels.value.find((c) => c.id === channelId)
+    return channel?.name || ''
   }
 
   async function createConversation(conversation: Omit<Conversation, 'id'>) {
@@ -437,6 +465,7 @@ export const useKoreroStore = defineStore('korero', () => {
   return {
     user,
     getUser,
+    currentWorkspace,
     users,
     getGroup,
     addGroupMember,
@@ -463,6 +492,7 @@ export const useKoreroStore = defineStore('korero', () => {
     conversations,
     setChannel,
     getChannel,
+    getChannelName,
     // addMember,
 
     createConversation,

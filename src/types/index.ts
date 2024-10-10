@@ -134,3 +134,13 @@ export enum MessageType {
   LINK = 'link',
   EVENT = 'event'
 }
+
+/**
+ * A User or Org. The properties shared by both
+ */
+export interface Workspace {
+  id: string
+  name: string
+  handle: string
+  type: 'org' | 'user'
+}

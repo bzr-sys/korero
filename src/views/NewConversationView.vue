@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
-import ChannelBreadcrumbNav from '@/components/ChannelBreadcrumbNav.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import ToastUiEditor from '@/components/ToastUiEditor.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
@@ -170,7 +169,6 @@ const messageValidationError = ref('')
 </script>
 
 <template>
-  <ChannelBreadcrumbNav :currentTitle="`Create a new ${conversationType}`" />
   <SmallContainer>
     <HeadingOne>Create a new {{ conversationType }}</HeadingOne>
     <div class="pb-6 text-xs">

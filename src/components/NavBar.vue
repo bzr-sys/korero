@@ -9,11 +9,11 @@ import ChevronDownSVG from './ChevronDownSVG.vue'
 import ChevronUpSVG from './ChevronUpSVG.vue'
 import SignOutSVG from './SignOutSVG.vue'
 import SettingsSVG from './SettingsSVG.vue'
-import UserAvatar from './UserAvatar.vue'
+import WorkspaceAvatar from './WorkspaceAvatar.vue'
 
 const koreroStore = useKoreroStore()
 
-const { user } = storeToRefs(koreroStore)
+const { user, currentWorkspace } = storeToRefs(koreroStore)
 
 const isUserDropdownExpanded = ref(false)
 
@@ -79,21 +79,21 @@ onUnmounted(() => {
           aria-label="User sub menu"
           ref="user-dropdown-button"
         >
-          <UserAvatar size="small" />
+          <WorkspaceAvatar size="small" />
           <ChevronDownSVG v-show="!isUserDropdownExpanded" width="12px" />
           <ChevronUpSVG v-show="isUserDropdownExpanded" width="12px" />
         </button>
         <div
           :class="
             isUserDropdownExpanded
-              ? `absolute top-[130%] right-0 bg-white rounded shadow`
+              ? `absolute top-[130%] right-0 bg-white rounded shadow z-30`
               : `sr-only`
           "
           :aria-hidden="!isUserDropdownExpanded"
           ref="user-dropdown"
         >
           <div class="flex flex-wrap gap-4 px-4 py-6 min-w-[calc(320px-2rem)]">
-            <UserAvatar size="medium" />
+            <WorkspaceAvatar size="medium" />
             <div>
               <div class="capitalize text-lg font-bold">{{ user.name }}</div>
               <div class="opacity-70 text-sm">{{ user.email }}</div>
@@ -101,8 +101,14 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <ul class="mb-1" @click="closeUserDropdown">
-            <li>
+          <div v-if="currentWorkspace" class="px-4 pb-6">
+            <div class="text-xs opacity-70">Current workspace</div>
+            {{ currentWorkspace.name }}
+            <!-- single use, double user icon -->
+          </div>
+
+          <ul class="py-1 border-t border-slate-200" @click="closeUserDropdown">
+            <li v-if="currentWorkspace">
               <RouterLink
                 :to="{ name: 'settings' }"
                 class="flex gap-2 items-center hover:bg-slate-100 w-full px-4 py-2"

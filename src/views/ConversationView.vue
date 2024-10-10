@@ -8,7 +8,6 @@ import BrainstormConversation from '@/components/BrainstormConversation.vue'
 import QuestionConversation from '@/components/QuestionConversation.vue'
 import PollConversation from '@/components/PollConversation.vue'
 import MeetingConversation from '@/components/MeetingConversation.vue'
-import ChannelBreadcrumbNav from '@/components/ChannelBreadcrumbNav.vue'
 import FormatDateString from '@/components/FormatDateString.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
 import SmallContainer from '@/components/SmallContainer.vue'
@@ -31,8 +30,6 @@ const conversationTitle = computed(() => {
 </script>
 
 <template>
-  <ChannelBreadcrumbNav :currentTitle="conversationTitle" />
-
   <SmallContainer>
     <template v-if="!koreroStore.currentConversation">
       <p>Cannot find conversation</p>

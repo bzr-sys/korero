@@ -28,8 +28,11 @@ bzr.onLogin(async () => {
     <template v-if="koreroStore.state">
       <div class="flex flex-1">
         <SideBar />
-        <main class="px-6 py-4 flex-grow">
-          <RouterView />
+        <!-- height = 100vh - navbar header height -->
+        <main class="flex-grow h-[calc(100vh-12*0.25rem)] overflow-hidden">
+          <div class="px-6 pt-4 pb-16 overflow-y-auto h-full">
+            <RouterView />
+          </div>
         </main>
       </div>
     </template>

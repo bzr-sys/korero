@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ChannelBreadcrumbNav from '@/components/ChannelBreadcrumbNav.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import { ConversationType } from '@/types'
@@ -37,8 +36,6 @@ function getTypeDescription(type: ConversationType) {
 </script>
 
 <template>
-  <ChannelBreadcrumbNav currentTitle="Create a new conversation" />
-
   <HeadingOne>Create a new conversation</HeadingOne>
   <div class="grid grid-cols-3 gap-4 py-4">
     <BaseCard v-for="(type, index) in ConversationType" :key="index">

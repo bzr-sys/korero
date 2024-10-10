@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import ChannelBreadcrumbNav from '@/components/ChannelBreadcrumbNav.vue'
 import BaseCard from '@/components/BaseCard.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
 import FormatDateString from '@/components/FormatDateString.vue'
@@ -10,15 +9,21 @@ import { useKoreroStore } from '@/stores/korero'
 import { ConversationType } from '@/types'
 import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
 import { storeToRefs } from 'pinia'
+import ConversationTypeIcon from '@/components/ConversationTypeIcon.vue'
+import ConversationList from '@/components/ConversationList.vue'
 
 const route = useRoute()
 const koreroStore = useKoreroStore()
 const { currentChannel, groups, user, conversations } = storeToRefs(koreroStore)
 
-const channelId = route.params.channelId as string
+const channelId = ref(route.params.channelId as string)
+
+watch(route, async (route) => {
+  channelId.value = route.params.channelId as string
+})
 
 const channelConversations = computed(() => {
-  return conversations.value.filter((c) => c.channelId === channelId)
+  return conversations.value.filter((c) => c.channelId === channelId.value)
 })
 
 const conversationTypeParam = ref(route.params.conversationType as ConversationType)
@@ -72,22 +77,18 @@ function removeMember(id: string) {
   }
   manageMembers.value = false
 }
-
-console.log(groups)
 </script>
 
 <template>
-  <ChannelBreadcrumbNav />
-
   <div class="grid gap-6 lg:grid-cols-3">
     <div class="col-span-2">
-      <div class="flex gap-4 justify-between items-end">
+      <div class="flex gap-4 justify-between items-center pb-2">
         <HeadingOne class="capitalize"
           >{{ conversationTypeParam ? conversationTypeParam : 'Conversation' }}s</HeadingOne
         >
 
         <RouterLink
-          class="btn btn-sm btn-accent"
+          class="btn btn-xs"
           :to="{ name: 'newConversationChoose', params: { channelId } }"
           >New conversation</RouterLink
         >
@@ -103,20 +104,8 @@ console.log(groups)
         There are no {{ conversationTypeParam }}s here yet.
       </p>
 
-      <div class="grid gap-4 py-4">
-        <BaseCard v-for="conversation in filteredConversations" :key="conversation.id">
-          <div class="badge badge-accent">{{ conversation.type }}</div>
-          <h2 class="card-title">
-            <RouterLink
-              :to="{ name: 'conversation', params: { conversationId: conversation.id } }"
-              >{{ conversation.title }}</RouterLink
-            >
-          </h2>
-          <div class="italic text-xs">
-            By {{ koreroStore.getUser(conversation.authorId).name }} on
-            <FormatDateString :dateString="conversation.created" :defaultCss="false" />
-          </div>
-        </BaseCard>
+      <div class="py-4 px-6 rounded border border-slate-200">
+        <ConversationList :conversations="filteredConversations" />
       </div>
     </div>
     <div>
@@ -126,7 +115,7 @@ console.log(groups)
           <button class="btn btn-sm" @click="manageMembers = false">Done</button>
         </div>
 
-        <button v-else class="btn btn-sm" @click="manageMembers = true">Manange</button>
+        <button v-else class="btn btn-xs" @click="manageMembers = true">Manage</button>
       </HeadingTwo>
       <ManageChannelMembers
         v-if="manageMembers"
@@ -139,24 +128,28 @@ console.log(groups)
           userName(member)
         }}</span>
       </div>
-      <HeadingTwo class="pt-1 pb-4">Conversation types</HeadingTwo>
-      <ul class="menu bg-slate-50 border-slate-200 border rounded-box">
-        <li>
-          <RouterLink
-            :to="{ name: 'channel', params: { channelId } }"
-            :class="{ active: !conversationTypeParam }"
-            >View all conversations</RouterLink
-          >
-        </li>
-        <li v-for="(type, index) in ConversationType" :key="index">
-          <RouterLink
-            :to="{ name: 'channelByType', params: { channelId, conversationType: type } }"
-            class="capitalize"
-            :class="{ active: type === conversationTypeParam }"
-            >{{ type }}s</RouterLink
-          >
-        </li>
-      </ul>
+      <div class="pt-4">
+        <HeadingTwo>Conversation types</HeadingTwo>
+        <ul class="menu bg-slate-50 border-slate-200 border rounded-box my-2">
+          <li>
+            <RouterLink
+              :to="{ name: 'channel', params: { channelId } }"
+              :class="{ active: !conversationTypeParam }"
+              >View all conversations</RouterLink
+            >
+          </li>
+          <li v-for="(type, index) in ConversationType" :key="index">
+            <RouterLink
+              :to="{ name: 'channelByType', params: { channelId, conversationType: type } }"
+              class="capitalize flex gap-2 items-center"
+              :class="{ active: type === conversationTypeParam }"
+            >
+              <ConversationTypeIcon :type="type" />
+              <span>{{ type }}s</span>
+            </RouterLink>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </template>
