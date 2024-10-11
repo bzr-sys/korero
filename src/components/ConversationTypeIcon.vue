@@ -8,7 +8,7 @@ import BrainstormSVG from '@/components/BrainstormSVG.vue'
 import { ConversationType } from '@/types'
 import { computed, type Component } from 'vue'
 
-defineProps<{ type: ConversationType }>()
+const { type, width = '18px' } = defineProps<{ type: ConversationType; width?: string }>()
 
 // TODO need to make SVG title ids unique for accessibility
 // Could create a composable and generate a unique ID on mount to append to id and aria-labelledby
@@ -26,7 +26,7 @@ const getIconComponent = computed(() => (type: ConversationType) => iconMap[type
 </script>
 
 <template>
-  <component :is="getIconComponent(type)" width="18px" />
+  <component :is="getIconComponent(type)" :width="width" />
 </template>
 
 <style scoped></style>

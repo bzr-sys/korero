@@ -37,10 +37,9 @@ async function createChannel() {
 </script>
 
 <template>
-  <HeadingOne class="mb-2">Create a new channel</HeadingOne>
-
   <SmallContainer>
-    <div class="mt-16 p-6 rounded border border-slate-200">
+    <div class="mt-12 p-6 rounded border border-slate-200">
+      <HeadingOne class="mb-4">Create a new <span class="text-accent">channel</span></HeadingOne>
       <form @submit.prevent="createChannel">
         <TextInput label="Channel name" v-model="channelName" />
         <button class="btn btn-accent">Create channel</button>

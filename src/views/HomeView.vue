@@ -28,22 +28,20 @@ function getGreeting() {
 </script>
 
 <template>
-  <div class="">
-    <HeadingOne>Home</HeadingOne>
-    <div class="text-center pt-8 py-8">
-      <div class="text-4xl">{{ getGreeting() }}</div>
-      <div class="text-lg">@{{ user.handle }}</div>
-      <div v-if="currentWorkspace" class="opacity-70 text-sm">{{ currentWorkspace.name }}</div>
-    </div>
-
-    <SmallContainer v-if="channels.length === 0">
-      <div class="p-6 rounded border border-slate-200 text-center">
-        <p class="mb-4">Create your first channel in this workspace.</p>
-        <RouterLink :to="{ name: 'newChannel' }" class="btn btn-lg btn-accent"
-          >Create Channel</RouterLink
-        >
-      </div>
-    </SmallContainer>
-    <RecentConversations v-else />
+  <HeadingOne>Home</HeadingOne>
+  <div class="text-center pt-8 py-8">
+    <div class="text-4xl">{{ getGreeting() }}</div>
+    <div class="text-lg">@{{ user.handle }}</div>
+    <div v-if="currentWorkspace" class="opacity-70 text-sm">{{ currentWorkspace.name }}</div>
   </div>
+
+  <SmallContainer v-if="channels.length === 0">
+    <div class="p-6 rounded border border-slate-200 text-center">
+      <p class="mb-4">Create your first channel in this workspace.</p>
+      <RouterLink :to="{ name: 'newChannel' }" class="btn btn-lg btn-accent"
+        >Create Channel</RouterLink
+      >
+    </div>
+  </SmallContainer>
+  <RecentConversations v-else />
 </template>

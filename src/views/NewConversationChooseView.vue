@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import HeadingOne from '@/components/HeadingOne.vue'
-import BaseCard from '@/components/BaseCard.vue'
+import ConversationTypeIcon from '@/components/ConversationTypeIcon.vue'
 import { ConversationType } from '@/types'
 import { useRoute } from 'vue-router'
 import { useKoreroStore } from '@/stores/korero'
@@ -36,19 +36,30 @@ function getTypeDescription(type: ConversationType) {
 </script>
 
 <template>
-  <HeadingOne>Create a new conversation</HeadingOne>
-  <div class="grid grid-cols-3 gap-4 py-4">
-    <BaseCard v-for="(type, index) in ConversationType" :key="index">
-      <h2 class="card-title capitalize">{{ type }}</h2>
-      <p>{{ getTypeDescription(type) }}</p>
+  <HeadingOne class="pb-2">Create a new <span class="text-accent">conversation</span></HeadingOne>
+  <div class="grid grid-cols-3 gap-4 max-w-screen-2xl">
+    <div
+      v-for="(type, index) in ConversationType"
+      :key="index"
+      class="py-4 px-6 rounded border border-slate-200 flex flex-col justify-between"
+    >
+      <!-- top -->
       <div>
-        <RouterLink
-          :to="{ name: 'newConversation', params: { channelId }, query: { type } }"
-          class="btn btn-accent"
-          >Choose</RouterLink
-        >
+        <div class="flex gap-4 items-center">
+          <ConversationTypeIcon :type="type" class="flex-shrink-0" width="24px" />
+          <div>
+            <h2 class="card-title capitalize">{{ type }}</h2>
+          </div>
+        </div>
+        <p class="py-4">{{ getTypeDescription(type) }}</p>
       </div>
-    </BaseCard>
+      <!-- bottom -->
+      <RouterLink
+        :to="{ name: 'newConversation', params: { channelId }, query: { type } }"
+        class="btn btn-accent btn-block"
+        >Create {{ type }}</RouterLink
+      >
+    </div>
   </div>
 </template>
 

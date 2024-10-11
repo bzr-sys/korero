@@ -7,6 +7,7 @@ import BaseLegend from '@/components/BaseLegend.vue'
 import TextInput from '@/components/TextInput.vue'
 import DateInput from '@/components/DateInput.vue'
 import SmallContainer from '@/components/SmallContainer.vue'
+import ConversationTypeIcon from '@/components/ConversationTypeIcon.vue'
 import { ConversationType, Agency } from '@/types'
 import type { Meeting, Poll, Brainstorm, Conversation, OwnerAgenda, CollabAgenda } from '@/types'
 import { dateStrToISO } from '@/date'
@@ -170,158 +171,176 @@ const messageValidationError = ref('')
 
 <template>
   <SmallContainer>
-    <HeadingOne>Create a new {{ conversationType }}</HeadingOne>
-    <div class="pb-6 text-xs">
-      <RouterLink :to="{ name: 'newConversationChoose', params: { channelId } }" class="link"
-        >Choose a different type</RouterLink
-      >
-    </div>
-
-    <form @submit.prevent="createConversation">
-      <input type="hidden" v-model="chosenType" />
-
-      <TextInput label="Title" v-model="title" />
-
-      <div>
-        <ToastUiEditor
-          v-if="chosenType !== ConversationType.MEETING"
-          @updateValue="(t) => (message = t)"
-          :label="messageDescription"
-          height="auto"
-          initialEditType="markdown"
-          :validationError="messageValidationError"
-          class="mb-4"
-        />
-
-        <!-- MEETING -->
-
-        <div v-if="chosenType === ConversationType.MEETING">
-          <DateInput label="Date" v-model="meetingDate" />
-
-          <fieldset>
-            <BaseLegend>Agenda settings</BaseLegend>
-            <div class="max-w-xs mb-8">
-              <div class="form-control">
-                <label class="label cursor-pointer">
-                  <span class="label-text">You set agenda now</span>
-                  <input type="radio" class="radio" :value="Agency.OWNER" v-model="agendaSetting" />
-                </label>
-              </div>
-              <div class="form-control">
-                <label class="label cursor-pointer">
-                  <span class="label-text">Set agenda collaboratively</span>
-                  <input
-                    type="radio"
-                    class="radio"
-                    :value="Agency.COLLAB"
-                    v-model="agendaSetting"
-                  />
-                </label>
-              </div>
-            </div>
-          </fieldset>
-
-          <template v-if="agendaSetting === Agency.OWNER">
-            <!-- Agenda items in a single field for non-collab -->
-            <ToastUiEditor
-              @updateValue="(t) => (agendaText = t)"
-              label="Agenda Items"
-              height="auto"
-              initialEditType="markdown"
-            />
-          </template>
-          <template v-if="agendaSetting === Agency.COLLAB">
-            <DateInput label="Agenda item proposal due date" v-model="due" />
-
-            <fieldset>
-              <legend class="sr-only">Agenda Proposed Items Decision Process</legend>
-              <div class="max-w-xs mb-8">
-                <div class="form-control">
-                  <label :for="'AgendaDecision' + Agency.OWNER" class="label cursor-pointer">
-                    <span class="label-text">You decide about agenda items</span>
-                    <input
-                      type="radio"
-                      :id="'AgendaDecision' + Agency.OWNER"
-                      class="radio"
-                      :value="Agency.OWNER"
-                      v-model="agendaDecision"
-                    />
-                  </label>
-                </div>
-                <div class="form-control">
-                  <label :for="'AgendaDecision' + Agency.COLLAB" class="label cursor-pointer">
-                    <span class="label-text">Vote for agenda items</span>
-                    <input
-                      type="radio"
-                      :id="'AgendaDecision' + Agency.COLLAB"
-                      class="radio"
-                      :value="Agency.COLLAB"
-                      v-model="agendaDecision"
-                    />
-                  </label>
-                </div>
-              </div>
-            </fieldset>
-            <fieldset>
-              <BaseLegend>Agenda items</BaseLegend>
-
-              <BaseCard v-for="(item, index) in agendaItems" :key="index" class="mb-4">
-                <div>Agenda item {{ index + 1 }}</div>
-
-                <TextInput label="Title" v-model="item.title" />
-
-                <!-- Description is optional -->
-                <ToastUiEditor
-                  @updateValue="(t) => (item.text = t)"
-                  label="Description"
-                  height="auto"
-                  initialEditType="markdown"
-                />
-              </BaseCard>
-
-              <button class="btn btn-sm mb-4" type="button" @click="addAgendaItem">Add item</button>
-            </fieldset>
-          </template>
-        </div>
-
-        <!-- POLL -->
-
-        <div v-else-if="chosenType === ConversationType.POLL">
-          <DateInput label="Due" v-model="due" />
-
-          <fieldset class="mb-4">
-            <BaseLegend>Poll options</BaseLegend>
-
-            <TextInput
-              v-for="(option, index) in pollOptions"
-              :key="index"
-              :label="`Option ${index + 1}`"
-              v-model="pollOptions[index]"
-              :srOnlyLabel="true"
-            />
-
-            <button class="btn btn-sm mb-4" type="button" @click="addPollOption">Add option</button>
-          </fieldset>
-
-          <div class="form-control max-w-xs mb-8">
-            <label class="label cursor-pointer">
-              <span class="label-text">Allow multiple answers</span>
-              <input v-model="multipleAnswers" type="checkbox" class="toggle" />
-            </label>
+    <div class="mt-12 py-4 px-6 rounded border border-slate-200">
+      <div class="flex gap-4 items-center pb-6">
+        <ConversationTypeIcon :type="conversationType" class="flex-shrink-0" width="36px" />
+        <div>
+          <HeadingOne
+            >Create a new <span class="text-accent">{{ conversationType }}</span></HeadingOne
+          >
+          <div class="text-xs opacity-70">
+            <RouterLink :to="{ name: 'newConversationChoose', params: { channelId } }" class="link"
+              >Change conversation type</RouterLink
+            >
           </div>
         </div>
-
-        <!-- BRAINSTORM -->
-
-        <DateInput
-          v-else-if="chosenType === ConversationType.BRAINSTORM"
-          label="Due"
-          v-model="due"
-        />
       </div>
 
-      <button class="btn btn-accent mt-4">Create {{ conversationType }}</button>
-    </form>
+      <form @submit.prevent="createConversation">
+        <input type="hidden" v-model="chosenType" />
+
+        <TextInput label="Title" v-model="title" />
+
+        <div>
+          <ToastUiEditor
+            v-if="chosenType !== ConversationType.MEETING"
+            @updateValue="(t) => (message = t)"
+            :label="messageDescription"
+            height="auto"
+            initialEditType="markdown"
+            :validationError="messageValidationError"
+            class="mb-4"
+          />
+
+          <!-- MEETING -->
+
+          <div v-if="chosenType === ConversationType.MEETING">
+            <DateInput label="Date" v-model="meetingDate" />
+
+            <fieldset>
+              <BaseLegend>Agenda settings</BaseLegend>
+              <div class="max-w-xs mb-8">
+                <div class="form-control">
+                  <label class="label cursor-pointer">
+                    <span class="label-text">You set agenda now</span>
+                    <input
+                      type="radio"
+                      class="radio"
+                      :value="Agency.OWNER"
+                      v-model="agendaSetting"
+                    />
+                  </label>
+                </div>
+                <div class="form-control">
+                  <label class="label cursor-pointer">
+                    <span class="label-text">Set agenda collaboratively</span>
+                    <input
+                      type="radio"
+                      class="radio"
+                      :value="Agency.COLLAB"
+                      v-model="agendaSetting"
+                    />
+                  </label>
+                </div>
+              </div>
+            </fieldset>
+
+            <template v-if="agendaSetting === Agency.OWNER">
+              <!-- Agenda items in a single field for non-collab -->
+              <ToastUiEditor
+                @updateValue="(t) => (agendaText = t)"
+                label="Agenda Items"
+                height="auto"
+                initialEditType="markdown"
+              />
+            </template>
+            <template v-if="agendaSetting === Agency.COLLAB">
+              <DateInput label="Agenda item proposal due date" v-model="due" />
+
+              <fieldset>
+                <legend class="sr-only">Agenda Proposed Items Decision Process</legend>
+                <div class="max-w-xs mb-8">
+                  <div class="form-control">
+                    <label :for="'AgendaDecision' + Agency.OWNER" class="label cursor-pointer">
+                      <span class="label-text">You decide about agenda items</span>
+                      <input
+                        type="radio"
+                        :id="'AgendaDecision' + Agency.OWNER"
+                        class="radio"
+                        :value="Agency.OWNER"
+                        v-model="agendaDecision"
+                      />
+                    </label>
+                  </div>
+                  <div class="form-control">
+                    <label :for="'AgendaDecision' + Agency.COLLAB" class="label cursor-pointer">
+                      <span class="label-text">Vote for agenda items</span>
+                      <input
+                        type="radio"
+                        :id="'AgendaDecision' + Agency.COLLAB"
+                        class="radio"
+                        :value="Agency.COLLAB"
+                        v-model="agendaDecision"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset>
+                <BaseLegend>Agenda items</BaseLegend>
+
+                <BaseCard v-for="(item, index) in agendaItems" :key="index" class="mb-4">
+                  <div>Agenda item {{ index + 1 }}</div>
+
+                  <TextInput label="Title" v-model="item.title" />
+
+                  <!-- Description is optional -->
+                  <ToastUiEditor
+                    @updateValue="(t) => (item.text = t)"
+                    label="Description"
+                    height="auto"
+                    initialEditType="markdown"
+                  />
+                </BaseCard>
+
+                <button class="btn btn-sm mb-4" type="button" @click="addAgendaItem">
+                  Add item
+                </button>
+              </fieldset>
+            </template>
+          </div>
+
+          <!-- POLL -->
+
+          <div v-else-if="chosenType === ConversationType.POLL">
+            <DateInput label="Due" v-model="due" />
+
+            <fieldset class="mb-4">
+              <BaseLegend>Poll options</BaseLegend>
+
+              <TextInput
+                v-for="(option, index) in pollOptions"
+                :key="index"
+                :label="`Option ${index + 1}`"
+                v-model="pollOptions[index]"
+                :srOnlyLabel="true"
+              />
+
+              <button class="btn btn-sm mb-4" type="button" @click="addPollOption">
+                Add option
+              </button>
+            </fieldset>
+
+            <div class="form-control max-w-xs mb-8">
+              <label class="label cursor-pointer">
+                <span class="label-text">Allow multiple answers</span>
+                <input v-model="multipleAnswers" type="checkbox" class="toggle" />
+              </label>
+            </div>
+          </div>
+
+          <!-- BRAINSTORM -->
+
+          <DateInput
+            v-else-if="chosenType === ConversationType.BRAINSTORM"
+            label="Due"
+            v-model="due"
+          />
+        </div>
+
+        <button class="btn btn-accent mt-4">Create {{ conversationType }}</button>
+      </form>
+    </div>
   </SmallContainer>
 </template>
 

@@ -4,13 +4,14 @@ import { storeToRefs } from 'pinia'
 import { computed, type ComputedRef } from 'vue'
 import { type Team, type Org } from '@bzr/bazaar'
 import { bzr } from '@/bazaar'
+import BazaarLogoIcon from './BazaarLogoIcon.vue'
 
 const props = defineProps<{ initialMembers: string[] }>()
 const emit = defineEmits(['update:addMember', 'update:removeMember'])
 
 const koreroStore = useKoreroStore()
 
-function openModal() {
+function openOrgModal() {
   // @ts-ignore
   bzr.orgs.openModal()
 }
@@ -45,11 +46,7 @@ const availableMembers = computed(() => {
   })
 })
 
-console.log('initial', props.initialMembers)
-console.log('me', user.value.id)
-
 function selectMember(id: string) {
-  console.log('select', id)
   emit('update:addMember', id)
 }
 
@@ -68,35 +65,28 @@ function userName(id: string) {
 
 <template>
   <div>
-    <p>Channel Members</p>
-    <div>
-      <span class="badge">You</span>
-      <span class="badge" v-for="m in initialMembers" :key="m" @click="unselectMember(m)"
-        >{{ userName(m) }} X</span
-      >
-    </div>
-    <div>
-      <!-- <div
-            class="btn"
-            @click="
-              bzr.social.openModal((userId) => {
-                selectMember(userId)
-              })
-            "
-          >
-            Invite Guets
-          </div> -->
-      <p>
-        Org Members
-        <span class="btn btn-xs" @click="openModal()">Manage Members</span>
-      </p>
-      <div v-if="availableMembers.length > 0">
-        <div v-for="m in availableMembers" :key="m">
+    <ul class="text-sm">
+      <li>{{ user.name }}</li>
+      <li v-for="m in initialMembers" :key="m">
+        {{ userName(m) }}
+        <button @click="unselectMember(m)" class="text-error text-xs">Remove</button>
+      </li>
+    </ul>
+    <div class="pt-4">
+      <h3 class="font-bold pb-2 text-sm">
+        Non-members <span class="badge badge-sm">{{ availableMembers.length }}</span>
+      </h3>
+      <ul v-if="availableMembers.length > 0" class="text-sm pb-4">
+        <li v-for="m in availableMembers" :key="m">
           {{ userName(m) }}
-          <div class="btn" @click="selectMember(m)">Select</div>
-        </div>
-      </div>
-      <div v-else>Nobody left</div>
+          <button class="text-success text-xs" @click="selectMember(m)">Add</button>
+        </li>
+      </ul>
+      <button @click="openOrgModal" class="btn btn-sm">
+        <BazaarLogoIcon width="12px" /> Manage organization members
+      </button>
+      <!-- What does this mean? -->
+      <!-- <div v-else>Nobody left</div> -->
     </div>
   </div>
 </template>

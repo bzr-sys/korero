@@ -50,7 +50,7 @@ function openOrgModal() {
     <div class="flex flex-col gap-8">
       <div>
         <button @click="openOrgModal" class="btn btn-sm">
-          <BazaarLogoIcon width="12px" /> Manage Organizations
+          <BazaarLogoIcon width="12px" /> Manage organizations
         </button>
       </div>
       <div v-for="org in orgs" :key="org.id">
