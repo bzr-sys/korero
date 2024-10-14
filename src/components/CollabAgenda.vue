@@ -122,17 +122,19 @@ async function addAgendaItem() {
       <DueDate label="Propose agenda items by" :dateString="collabAgenda.due" />
     </div>
 
-    <form @submit.prevent="addAgendaItem">
-      <BaseCard>
+    <form @submit.prevent="addAgendaItem" class="box-border w-full">
+      <BaseCard class="box-border w-full">
         <div>Propose agenda item</div>
         <TextInput label="Title" v-model="agendaItemTitle" />
         <!-- Description is optional -->
+        <!-- 556px max w is a temp fix to stop editor breaking out of container -->
         <ToastUiEditor
           @updateValue="(t) => (agendaItemText = t)"
           label="Agenda item text"
           height="auto"
           initialEditType="markdown"
           ref="editor"
+          class="max-w-[556px]"
         />
       </BaseCard>
       <button type="submit" class="btn mt-4">Add agenda item</button>

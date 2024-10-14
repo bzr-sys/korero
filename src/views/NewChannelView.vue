@@ -2,7 +2,6 @@
 import HeadingOne from '@/components/HeadingOne.vue'
 import TextInput from '@/components/TextInput.vue'
 import SmallContainer from '@/components/SmallContainer.vue'
-import ManageChannelMembers from '@/components/ManageChannelMembers.vue'
 import { useKoreroStore } from '@/stores/korero'
 import { storeToRefs } from 'pinia'
 import { ref, type Ref } from 'vue'
@@ -13,19 +12,6 @@ const koreroStore = useKoreroStore()
 const { user } = storeToRefs(koreroStore)
 
 const selectedMembers: Ref<string[]> = ref([])
-
-function selectMember(id: string) {
-  if (!selectedMembers.value.includes(id)) {
-    selectedMembers.value.push(id)
-  }
-}
-
-function unselectMember(id: string) {
-  const i = selectedMembers.value.indexOf(id)
-  if (i > -1) {
-    selectedMembers.value.splice(i, 1)
-  }
-}
 
 const router = useRouter()
 
@@ -46,23 +32,19 @@ async function createChannel() {
     return
   }
 
-  router.push({ name: 'channel', params: { channelId } })
+  router.push({ name: 'newConversationChoose', params: { channelId } })
 }
 </script>
 
 <template>
   <SmallContainer>
-    <HeadingOne class="mb-4">Create a new channel</HeadingOne>
-
-    <form @submit.prevent="createChannel">
-      <TextInput label="Channel name" v-model="channelName" />
-      <ManageChannelMembers
-        :initial-members="selectedMembers"
-        @update:add-member="selectMember"
-        @update:remove-member="unselectMember"
-      ></ManageChannelMembers>
-      <button class="btn btn-accent">Create channel</button>
-    </form>
+    <div class="mt-12 p-6 rounded border border-slate-200">
+      <HeadingOne class="mb-4">Create a new <span class="text-accent">channel</span></HeadingOne>
+      <form @submit.prevent="createChannel">
+        <TextInput label="Channel name" v-model="channelName" />
+        <button class="btn btn-accent">Create channel</button>
+      </form>
+    </div>
   </SmallContainer>
 </template>
 

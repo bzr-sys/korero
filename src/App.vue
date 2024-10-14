@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
 import { bzr } from '@/bazaar'
-import { RouterLink } from 'vue-router'
-import LogoIconSVG from './components/LogoIconSVG.vue'
-import { storeToRefs } from 'pinia'
-import { computed } from 'vue'
-import type { ComputedRef } from 'vue'
+import NavBar from './components/NavBar.vue'
+import BaseLogin from './components/BaseLogin.vue'
+import SideBar from './components/SideBar.vue'
+import BaseOnboarding from './components/BaseOnboarding.vue'
 
 const koreroStore = useKoreroStore()
 koreroStore.autoSignIn()
@@ -14,80 +13,39 @@ bzr.onLogin(async () => {
   koreroStore.autoSignIn()
 })
 
-function login(): void {
-  bzr.login()
-}
-
-function logOut(): void {
-  bzr.logOut()
-}
-
-const { state, orgs, user } = storeToRefs(koreroStore)
-
-const currentOrg: ComputedRef<string> = computed(() => {
-  if (!state.value) {
-    return 'Choose org'
-  }
-  if (user.value.id === state.value.config.currentTeam) {
-    return user.value.name
-  }
-  const org = orgs.value.filter((o) => o.id === state.value!.config.currentTeam)
-  if (org.length > 0) {
-    return org[0].name
-  }
-  return 'Switch org'
-})
+// maybe redirect home if not onboarded
 </script>
 
 <template>
-  <div class="navbar bg-base-100">
-    <div class="flex-1">
-      <RouterLink :to="{ name: 'home' }" class="btn btn-ghost text-xl"
-        ><LogoIconSVG width="36px" /> Korero</RouterLink
-      >
-    </div>
-    <div class="flex-none">
-      <ul class="menu menu-horizontal px-1">
-        <li v-if="state">
-          <RouterLink :to="{ name: 'settings' }" class="font-bold">{{ currentOrg }}</RouterLink>
-        </li>
-        <!-- <li v-if="koreroStore.authenticated">
-          <details>
-            <summary>Menu</summary>
-            <ul class="bg-base-100 rounded-t-none p-2">
-              <li><RouterLink :to="{ name: 'home' }">Channels</RouterLink></li>
-              <li><RouterLink :to="{ name: 'settings' }">Settings</RouterLink></li>
-            </ul>
-          </details>
-        </li> -->
-        <li v-if="koreroStore.authenticated">
-          <button @click="logOut">Sign out</button>
-        </li>
-        <li v-else>
-          <button @click="login" class="btn btn-accent btn-sm">Log in with Bazaar</button>
-        </li>
-      </ul>
-    </div>
-  </div>
-  <div v-if="koreroStore.authenticated" class="container mx-auto mb-32 p-6">
-    <RouterView />
-  </div>
-  <div v-else>
-    <div class="text-center px-4 py-24">
-      <p>Log in with Bazaar to get started</p>
-    </div>
-  </div>
-  <footer class="footer px-8 py-4">
-    <div class="grid-flow-col items-center">
-      <LogoIconSVG width="36px" />
-      <div>
-        <div>
-          <strong>&copy; {{ new Date().getFullYear() }} Korero</strong>
-        </div>
-        <div>Communicate effectively with your team.</div>
+  <div
+    v-if="koreroStore.authenticated"
+    class="flex flex-col overflow-hidden fixed top-0 right-0 bottom-0 left-0 min-h-[600px]"
+  >
+    <NavBar />
+    <template v-if="!koreroStore.hasCompletedOnboarding">
+      <BaseOnboarding />
+    </template>
+    <template v-if="koreroStore.state">
+      <div class="flex flex-1">
+        <SideBar />
+        <!-- height = 100vh - navbar header height -->
+        <main class="flex-grow h-[calc(100vh-12*0.25rem)] overflow-hidden">
+          <div class="px-6 pt-4 pb-16 overflow-y-auto h-full">
+            <RouterView />
+          </div>
+        </main>
       </div>
-    </div>
-  </footer>
+    </template>
+  </div>
+  <template v-else>
+    <BaseLogin />
+  </template>
 </template>
 
-<style scoped></style>
+<style>
+html,
+body,
+#app {
+  height: 100%;
+}
+</style>
