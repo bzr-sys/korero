@@ -1,5 +1,15 @@
 name: Deploy to S3 and invalidate Cloudfront cache
-on: [push]
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        description: 'Where to deploy'
+        required: true
+        options:
+          - prod
+          - staging
+
 jobs:
   run:
     runs-on: ubuntu-latest
