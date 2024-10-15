@@ -33,7 +33,7 @@ jobs:
         if: github.event.inputs.environment == 'staging'
         env:
           VITE_APP_ID: ${{ secrets.STAGING_VITE_APP_ID }}
-        run: npm run build:staging
+        run: npm run build
 
       - name: Deploy to S3 and invalidate CloudFront - Production
         if: github.event.inputs.environment == 'prod'
