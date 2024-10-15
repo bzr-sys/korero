@@ -55,7 +55,7 @@ jobs:
         with:
           folder: dist
           bucket: ${{ secrets.STAGING_S3_BUCKET }}
-          bucket-region: ${{ secrets.STAGING_S3_BUCKET_REGION }}
+          bucket-region: ${{ secrets.S3_BUCKET_REGION }}
           dist-id: ${{ secrets.STAGING_CLOUDFRONT_DISTRIBUTION_ID }}
           invalidation: /
           delete-removed: true
