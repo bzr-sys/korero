@@ -1,4 +1,4 @@
-name: Deploy to S3 and invalidate Cloudfront cache
+name: Deploy to S3 and invalidate CloudFront cache
 on:
   workflow_dispatch:
     inputs:
@@ -13,6 +13,7 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -22,18 +23,40 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Build for production
+        if: github.event.inputs.environment == 'prod'
         env:
           VITE_APP_ID: ${{ secrets.VITE_APP_ID }}
         run: npm run build
 
-      - name: Deploy
+      - name: Build for staging
+        if: github.event.inputs.environment == 'staging'
+        env:
+          VITE_APP_ID: ${{ secrets.STAGING_VITE_APP_ID }}
+        run: npm run build:staging
+
+      - name: Deploy to S3 and invalidate CloudFront - Production
+        if: github.event.inputs.environment == 'prod'
         uses: reggionick/s3-deploy@v4
         with:
           folder: dist
           bucket: ${{ secrets.S3_BUCKET }}
           bucket-region: ${{ secrets.S3_BUCKET_REGION }}
           dist-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+          invalidation: /
+          delete-removed: true
+          no-cache: true
+          private: true
+          files-to-include: '{.*/**,**}'
+
+      - name: Deploy to S3 and invalidate CloudFront - Staging
+        if: github.event.inputs.environment == 'staging'
+        uses: reggionick/s3-deploy@v4
+        with:
+          folder: dist
+          bucket: ${{ secrets.STAGING_S3_BUCKET }}
+          bucket-region: ${{ secrets.STAGING_S3_BUCKET_REGION }}
+          dist-id: ${{ secrets.STAGING_CLOUDFRONT_DISTRIBUTION_ID }}
           invalidation: /
           delete-removed: true
           no-cache: true
