@@ -14,7 +14,9 @@ const config: BazaarOptions = {
   }
 }
 
-if (import.meta.env.DEV) {
+if (import.meta.env.VITE_BAZAAR_URI) {
+  config.bazaarUri = import.meta.env.VITE_BAZAAR_URI
+} else if (import.meta.env.DEV) {
   config.bazaarUri = 'http://localhost:3377'
 }
 
