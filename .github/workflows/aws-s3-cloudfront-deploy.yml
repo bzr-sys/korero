@@ -27,7 +27,6 @@ jobs:
         if: github.event.inputs.environment == 'prod'
         env:
           VITE_APP_ID: ${{ secrets.VITE_APP_ID }}
-          VITE_BAZAAR_URI: ${{ secrets.VITE_BAZAAR_URI }}
         run: npm run build
 
       - name: Build for staging

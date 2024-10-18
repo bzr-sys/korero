@@ -4,7 +4,6 @@ const baseURL = window.location.origin + window.location.pathname
 
 const config: BazaarOptions = {
   appId: import.meta.env.VITE_APP_ID || 'test',
-  bazaarUri: import.meta.env.VITE_BAZAAR_URI || 'http://localhost:3377',
   loginRedirectUri: `${baseURL}`,
   onApiConnectError: async function (bzr: BazaarApp, message: string) {
     console.log('OnConnectError', message)
@@ -15,7 +14,9 @@ const config: BazaarOptions = {
   }
 }
 
-if (import.meta.env.DEV) {
+if (import.meta.env.VITE_BAZAAR_URI) {
+  config.bazaarUri = import.meta.env.VITE_BAZAAR_URI
+} else if (import.meta.env.DEV) {
   config.bazaarUri = 'http://localhost:3377'
 }
 
