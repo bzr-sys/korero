@@ -12,7 +12,7 @@ const route = useRoute()
 const router = useRouter()
 
 const koreroStore = useKoreroStore()
-const { hasCompletedOnboarding, orgs, activeOrgs, user } = storeToRefs(koreroStore)
+const { hasCompletedOnboarding, activeOrgs, user } = storeToRefs(koreroStore)
 
 const START = 'start'
 const CREATE_ORG = 'create-org'
@@ -49,10 +49,6 @@ function openOrgModal() {
       noActiveOrgAfterModalClose.value = true
     }
   })
-}
-
-function openSocialModal() {
-  bzr.social.openModal()
 }
 </script>
 
@@ -99,6 +95,19 @@ function openSocialModal() {
           <AlertSVG />
           <span>Make sure you have at least one organization with an active subscription</span>
         </div>
+        <ol class="list-decimal text-left marker:font-bold pl-8">
+          <li>Open the Manage Organizations modal</li>
+          <li>Click "Create Organization"</li>
+          <li>Create an organization</li>
+          <li>Click "Activate"</li>
+          <li>Choose a plan and subscribe</li>
+          <li>
+            Close the modal, then
+            <button @click="currentStep = USE_ORG" class="link underline text-primary">
+              select your organization &rarr;
+            </button>
+          </li>
+        </ol>
       </div>
 
       <!-- JOIN_ORG -->
@@ -107,13 +116,19 @@ function openSocialModal() {
         <button @click="openOrgModal" class="btn btn-lg">
           <BazaarLogoIcon width="20px" /> Manage Organizations
         </button>
-        <div role="alert" class="alert alert-warning" v-if="noActiveOrgAfterModalClose">
-          <AlertSVG />
-          <span
-            >Make sure you are a member of at least one organization with an active
-            subscription</span
-          >
-        </div>
+        <ol class="list-decimal text-left marker:font-bold text-sm pl-4 flex flex-col gap-1 pt-2">
+          <li>Open the Manage Organizations modal</li>
+          <li>Search for an organization</li>
+          <li>Select the found organization</li>
+          <li>Click "Request Membership"</li>
+          <li>Close the modal</li>
+          <li>
+            When your request is accepted,
+            <button @click="currentStep = USE_ORG" class="link underline text-primary">
+              select your organization &rarr;
+            </button>
+          </li>
+        </ol>
       </div>
 
       <!-- USE_ORG -->
