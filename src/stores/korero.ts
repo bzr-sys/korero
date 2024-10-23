@@ -121,7 +121,7 @@ export const useKoreroStore = defineStore('korero', () => {
         // Get config
         const c = await configCollection.getAll()
         if (c.length) {
-          setState(c[0])
+          await setState(c[0])
 
           // Get channels
           syncChannels()
@@ -142,8 +142,8 @@ export const useKoreroStore = defineStore('korero', () => {
     }
   }
 
-  function setState(config: Config) {
-    const bzrCtx = bzr.createContext({ ownerId: config.currentTeam })
+  async function setState(config: Config) {
+    const bzrCtx = await bzr.createContext({ ownerId: config.currentTeam })
     state.value = {
       config: config,
       bzr: bzrCtx,
@@ -231,7 +231,7 @@ export const useKoreroStore = defineStore('korero', () => {
       const configId = await configCollection.insertOne(newConfig)
       config = { id: configId, ...newConfig }
     }
-    setState(config)
+    await setState(config)
     await syncChannels()
     await syncConversations()
   }
