@@ -10,7 +10,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 
 const koreroStore = useKoreroStore()
-const { currentConversation, messages } = storeToRefs(koreroStore)
+const { currentConversation, orderedMessages } = storeToRefs(koreroStore)
 
 // We know the conversation is a discussion
 const discussion = computed(() => currentConversation.value as Discussion)
@@ -19,9 +19,11 @@ const discussion = computed(() => currentConversation.value as Discussion)
 <template>
   <ToastUiViewer :initialValue="discussion.message" />
 
-  <HeadingTwo class="pt-4">{{ messages.length }} Comment{{ getPluralEnding(messages) }}</HeadingTwo>
+  <HeadingTwo class="pt-4"
+    >{{ orderedMessages.length }} Comment{{ getPluralEnding(orderedMessages) }}</HeadingTwo
+  >
 
-  <ChatMessage v-for="message in messages" :key="message.id" :message="message" />
+  <ChatMessage v-for="message in orderedMessages" :key="message.id" :message="message" />
 
   <MessageForm />
 </template>

@@ -346,6 +346,10 @@ export const useKoreroStore = defineStore('korero', () => {
 
   const messages = ref([] as Message[])
 
+  const orderedMessages = computed(() =>
+    messages.value.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime())
+  )
+
   let unsubscribeMessages: (() => Promise<BazaarMessage>) | undefined = undefined
 
   async function setConversation(id: string) {
@@ -500,6 +504,7 @@ export const useKoreroStore = defineStore('korero', () => {
     // Conversation view
     currentConversation,
     messages,
+    orderedMessages,
     setConversation,
     createMessage,
     updateConversation

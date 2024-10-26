@@ -11,7 +11,7 @@ import { type Meeting } from '@/types'
 
 const koreroStore = useKoreroStore()
 
-const { currentConversation, messages } = storeToRefs(koreroStore)
+const { currentConversation, orderedMessages } = storeToRefs(koreroStore)
 
 // We know the conversation is a meeting
 const meeting = computed(() => currentConversation.value as Meeting)
@@ -38,12 +38,12 @@ const meetingPast = computed(() => {
 
 const preMeetingMessages = computed(() => {
   const meetingDate = new Date(meeting.value.date)
-  return messages.value.filter((m) => new Date(m.created) < meetingDate)
+  return orderedMessages.value.filter((m) => new Date(m.created) < meetingDate)
 })
 
 const postMeetingMessages = computed(() => {
   const meetingDate = new Date(meeting.value.date)
-  return messages.value.filter((m) => {
+  return orderedMessages.value.filter((m) => {
     return new Date(m.created) > meetingDate
   })
 })

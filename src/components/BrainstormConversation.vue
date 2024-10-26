@@ -10,7 +10,7 @@ import { type Brainstorm } from '@/types'
 import { storeToRefs } from 'pinia'
 
 const koreroStore = useKoreroStore()
-const { currentConversation, messages, user } = storeToRefs(koreroStore)
+const { currentConversation, orderedMessages, user } = storeToRefs(koreroStore)
 
 // We know the conversation is a brainstorm
 const brainstorm = computed(() => currentConversation.value as Brainstorm)
@@ -23,7 +23,7 @@ const pastDue = computed(() => {
 })
 
 const myMessages = computed(() => {
-  return messages.value.filter((m) => m.authorId === user.value.id)
+  return orderedMessages.value.filter((m) => m.authorId === user.value.id)
 })
 
 const canWrite = computed(() => {
@@ -42,7 +42,7 @@ const canWrite = computed(() => {
   <template v-if="pastDue">
     <HeadingTwo class="pt-4">Messages</HeadingTwo>
 
-    <ChatMessage v-for="message in messages" :key="message.id" :message="message" />
+    <ChatMessage v-for="message in orderedMessages" :key="message.id" :message="message" />
   </template>
 
   <template v-else>
