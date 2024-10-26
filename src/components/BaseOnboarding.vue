@@ -50,6 +50,25 @@ function openOrgModal() {
     }
   })
 }
+
+function gtag_report_conversion() {
+  console.log('track conversion')
+  // gtag is in <head> in index.html
+  // @ts-ignore
+  gtag('event', 'conversion', {
+    send_to: 'AW-640602160/9UVmCKmtu9ABELCgu7EC'
+  })
+}
+
+function handleJustForMe(): void {
+  gtag_report_conversion()
+  koreroStore.setTeam(user.value.id)
+}
+
+function handleUseOrg(orgPrimaryTeamId: string): void {
+  gtag_report_conversion()
+  koreroStore.setTeam(orgPrimaryTeamId)
+}
 </script>
 
 <template>
@@ -89,7 +108,7 @@ function openOrgModal() {
           </template>
 
           <div>
-            <button @click="koreroStore.setTeam(user.id)" class="btn btn-md btn-block btn-ghost">
+            <button @click="handleJustForMe" class="btn btn-md btn-block btn-ghost">
               Just for me
             </button>
           </div>
@@ -147,7 +166,7 @@ function openOrgModal() {
 
           <ul class="flex flex-col gap-2">
             <li v-for="org in activeOrgs" :key="org.id">
-              <button @click="koreroStore.setTeam(org.primaryTeam.id)" class="btn btn-md btn-block">
+              <button @click="handleUseOrg(org.primaryTeam.id)" class="btn btn-md btn-block">
                 <div class="truncate h-[15px]">{{ org.name }}</div>
               </button>
             </li>
