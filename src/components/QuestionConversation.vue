@@ -12,7 +12,7 @@ import { ConversationType, type Message, type Question } from '@/types'
 import { storeToRefs } from 'pinia'
 
 const koreroStore = useKoreroStore()
-const { currentConversation, messages, user } = storeToRefs(koreroStore)
+const { currentConversation, orderedMessages, user } = storeToRefs(koreroStore)
 
 // We know the conversation is a question
 const question = computed(() => currentConversation.value as Question)
@@ -24,7 +24,7 @@ async function markAnswer(messageId: string) {
 }
 
 const chosenAnswer = computed<Message | undefined>(() => {
-  return messages.value.find((answerId) => answerId.id === question.value.answerId)
+  return orderedMessages.value.find((answerId) => answerId.id === question.value.answerId)
 })
 </script>
 
@@ -41,10 +41,10 @@ const chosenAnswer = computed<Message | undefined>(() => {
     </div>
 
     <HeadingTwo class="pt-4"
-      >{{ messages.length }} Answer{{ getPluralEnding(messages) }}</HeadingTwo
+      >{{ orderedMessages.length }} Answer{{ getPluralEnding(orderedMessages) }}</HeadingTwo
     >
 
-    <div v-for="message in messages" :key="message.id">
+    <div v-for="message in orderedMessages" :key="message.id">
       <ChatMessage :message="message" />
       <div v-if="question.answerId === message.id" class="badge badge-success">Chosen Answer</div>
       <div v-else-if="!question.answerId && question.authorId === user.id">

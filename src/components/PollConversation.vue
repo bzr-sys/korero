@@ -15,7 +15,7 @@ import type { Poll } from '@/types'
 import { storeToRefs } from 'pinia'
 
 const koreroStore = useKoreroStore()
-const { currentConversation, messages, user } = storeToRefs(koreroStore)
+const { currentConversation, orderedMessages, user } = storeToRefs(koreroStore)
 
 // We know the conversation is a poll
 const poll = computed(() => currentConversation.value as Poll)
@@ -119,9 +119,11 @@ async function votePoll() {
     </div>
   </div>
 
-  <HeadingTwo class="pt-4">{{ messages.length }} Comment{{ getPluralEnding(messages) }}</HeadingTwo>
+  <HeadingTwo class="pt-4"
+    >{{ orderedMessages.length }} Comment{{ getPluralEnding(orderedMessages) }}</HeadingTwo
+  >
 
-  <ChatMessage v-for="message in messages" :key="message.id" :message="message" />
+  <ChatMessage v-for="message in orderedMessages" :key="message.id" :message="message" />
 
   <MessageForm />
 </template>
