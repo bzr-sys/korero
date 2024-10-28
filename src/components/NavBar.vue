@@ -53,10 +53,6 @@ function handleClickOutside(event: MouseEvent): void {
   }
 }
 
-function toggleSidebar(): void {
-  koreroStore.toggleSideBarExpanded()
-}
-
 onMounted(() => {
   document.addEventListener('keydown', handleEscKey)
   document.addEventListener('click', handleClickOutside)
@@ -75,7 +71,7 @@ onUnmounted(() => {
       <div class="flex flex-row-reverse gap-4 items-center">
         <RouterLink :to="{ name: 'home' }"> <LogoTextSVG width="100px" /></RouterLink>
         <button
-          @click="toggleSidebar"
+          @click="koreroStore.toggleSideBarExpanded"
           :aria-expanded="isSideBarExpanded"
           aria-label="Side bar"
           class="lg:hidden"
