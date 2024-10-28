@@ -22,8 +22,8 @@ function openOrgModal() {
   <HeadingTwo class="pb-4">Workspaces</HeadingTwo>
 
   <!-- grid 2x2 -->
-  <div class="grid gap-y-4 grid-cols-[minmax(150px,1fr)_4fr] mb-12 [&>div]:p-2">
-    <div class="text-right border-r border-slate-200">
+  <div class="grid gap-y-4 sm:grid-cols-[minmax(150px,1fr)_4fr] mb-12 [&>div]:py-2 sm:[&>div]:p-2">
+    <div class="sm:text-right sm:border-r sm:border-slate-200">
       <h3 class="text-sm opacity-70">Personal</h3>
     </div>
     <div>
@@ -44,7 +44,7 @@ function openOrgModal() {
       <div class="opacity-70 text-sm">{{ user.email }}</div>
       <div class="opacity-70 text-sm">@{{ user.handle }}</div>
     </div>
-    <div class="text-right border-r border-slate-200">
+    <div class="sm:text-right sm:border-r sm:border-slate-200">
       <h3 class="text-sm opacity-70">Organizations</h3>
     </div>
     <div class="flex flex-col gap-8">

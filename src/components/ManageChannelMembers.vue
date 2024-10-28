@@ -83,7 +83,7 @@ function userName(id: string) {
         </li>
       </ul>
       <button @click="openOrgModal" class="btn btn-sm">
-        <BazaarLogoIcon width="12px" /> Manage organization members
+        <BazaarLogoIcon width="12px" /> Manage org members
       </button>
       <!-- What does this mean? -->
       <!-- <div v-else>Nobody left</div> -->
