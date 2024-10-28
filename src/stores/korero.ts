@@ -53,6 +53,12 @@ export const useKoreroStore = defineStore('korero', () => {
 
   const hasCompletedOnboarding = computed(() => !!state.value)
 
+  const isSideBarExpanded = ref(false)
+
+  function toggleSideBarExpanded(): void {
+    isSideBarExpanded.value = !isSideBarExpanded.value
+  }
+
   const user: Ref<User> = ref(emptyUser)
   const orgs: Ref<Org[]> = ref([])
   const users: Ref<{ [key: string]: User }> = ref({})
@@ -477,6 +483,8 @@ export const useKoreroStore = defineStore('korero', () => {
     groups,
     state,
     hasCompletedOnboarding,
+    isSideBarExpanded,
+    toggleSideBarExpanded,
     orgs,
     activeOrgs,
     setOrgs,

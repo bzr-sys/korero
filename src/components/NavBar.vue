@@ -10,10 +10,11 @@ import ChevronUpSVG from './ChevronUpSVG.vue'
 import SignOutSVG from './SignOutSVG.vue'
 import SettingsSVG from './SettingsSVG.vue'
 import WorkspaceAvatar from './WorkspaceAvatar.vue'
+import HamburgerSVG from './HamburgerSVG.vue'
 
 const koreroStore = useKoreroStore()
 
-const { user, currentWorkspace } = storeToRefs(koreroStore)
+const { user, currentWorkspace, isSideBarExpanded } = storeToRefs(koreroStore)
 
 const isUserDropdownExpanded = ref(false)
 
@@ -52,6 +53,10 @@ function handleClickOutside(event: MouseEvent): void {
   }
 }
 
+function toggleSidebar(): void {
+  koreroStore.toggleSideBarExpanded()
+}
+
 onMounted(() => {
   document.addEventListener('keydown', handleEscKey)
   document.addEventListener('click', handleClickOutside)
@@ -67,8 +72,16 @@ onUnmounted(() => {
   <header class="bg-slate-50 border-b border-slate-200">
     <div class="px-4 py-2 h-12 flex justify-between gap-4 items-center">
       <!-- left -->
-      <div>
+      <div class="flex flex-row-reverse gap-4 items-center">
         <RouterLink :to="{ name: 'home' }"> <LogoTextSVG width="100px" /></RouterLink>
+        <button
+          @click="toggleSidebar"
+          :aria-expanded="isSideBarExpanded"
+          aria-label="Side bar"
+          class="lg:hidden"
+        >
+          <HamburgerSVG width="14px" />
+        </button>
       </div>
       <!-- right -->
       <div class="relative">

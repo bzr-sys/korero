@@ -81,7 +81,7 @@ function toggleMembersDropdown(): void {
 
 <template>
   <div class="grid gap-6 lg:grid-cols-3 max-w-screen-2xl">
-    <div class="col-span-2">
+    <div class="lg:col-span-2">
       <div class="flex gap-4 justify-between items-center pb-2">
         <HeadingOne class="capitalize"
           >{{ conversationTypeParam ? conversationTypeParam : 'Conversation' }}s</HeadingOne
@@ -117,10 +117,6 @@ function toggleMembersDropdown(): void {
       </div>
     </div>
     <div>
-      <!--  -->
-      <!--  -->
-      <!--  -->
-      <!--  -->
       <div class="flex gap-4 justify-between items-center pb-2">
         <HeadingTwo>Members</HeadingTwo>
         <button

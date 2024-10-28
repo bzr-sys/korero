@@ -1,0 +1,15 @@
+<script setup lang="ts">
+defineProps<{ width: string }>()
+</script>
+
+<template>
+  <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" :style="`width: ${width}`">
+    <g id="_31" data-name="31">
+      <path d="m15.5 4h-15a.5.5 0 0 1 0-1h15a.5.5 0 0 1 0 1z"></path>
+      <path d="m15.5 9h-15a.5.5 0 0 1 0-1h15a.5.5 0 0 1 0 1z"></path>
+      <path d="m15.5 14h-15a.5.5 0 0 1 0-1h15a.5.5 0 0 1 0 1z"></path>
+    </g>
+  </svg>
+</template>
+
+<style scoped></style>

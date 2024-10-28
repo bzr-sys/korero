@@ -9,7 +9,7 @@ import { storeToRefs } from 'pinia'
 const route = useRoute()
 
 const koreroStore = useKoreroStore()
-const { channels, currentChannel } = storeToRefs(koreroStore)
+const { channels, currentChannel, isSideBarExpanded } = storeToRefs(koreroStore)
 
 function openOrgModal() {
   // @ts-ignore
@@ -20,7 +20,8 @@ function openOrgModal() {
 <template>
   <!-- height = 100vh - navbar header height -->
   <aside
-    class="bg-slate-50 min-w-56 border-r border-slate-200 flex flex-col h-[calc(100vh-12*0.25rem)] overflow-hidden"
+    class="bg-slate-50 min-w-56 border-r border-slate-200 lg:flex flex-col h-[calc(100vh-12*0.25rem)] overflow-hidden"
+    :class="isSideBarExpanded ? 'max-lg:flex' : 'max-lg:sr-only'"
   >
     <!-- top sidebar nav -->
     <ul class="p-4 border-b border-slate-200 [&>li]:mb-px">

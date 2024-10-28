@@ -37,7 +37,7 @@ function getTypeDescription(type: ConversationType) {
 
 <template>
   <HeadingOne class="pb-2">Create a new <span class="text-accent">conversation</span></HeadingOne>
-  <div class="grid grid-cols-3 gap-4 max-w-screen-2xl">
+  <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-screen-2xl">
     <div
       v-for="(type, index) in ConversationType"
       :key="index"
