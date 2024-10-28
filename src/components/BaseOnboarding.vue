@@ -51,22 +51,11 @@ function openOrgModal() {
   })
 }
 
-function gtag_report_conversion() {
-  console.log('track conversion')
-  // gtag is in <head> in index.html
-  // @ts-ignore
-  gtag('event', 'conversion', {
-    send_to: 'AW-640602160/9UVmCKmtu9ABELCgu7EC'
-  })
-}
-
 function handleJustForMe(): void {
-  gtag_report_conversion()
   koreroStore.setTeam(user.value.id)
 }
 
 function handleUseOrg(orgPrimaryTeamId: string): void {
-  gtag_report_conversion()
   koreroStore.setTeam(orgPrimaryTeamId)
 }
 </script>
