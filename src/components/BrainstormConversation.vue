@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useKoreroStore } from '@/stores/korero'
 import DueDate from '@/components/DueDate.vue'
 import HeadingTwo from './HeadingTwo.vue'
-import ToastUiViewer from '@/components/ToastUiViewer.vue'
+import EditViewer from '@/components/EditViewer.vue'
 import MessageForm from '@/components/MessageForm.vue'
 import ChatMessage from './ChatMessage.vue'
 import { type Brainstorm } from '@/types'
@@ -37,7 +37,10 @@ const canWrite = computed(() => {
 <template>
   <DueDate label="Contribute ideas by" :dateString="brainstorm.due" />
 
-  <ToastUiViewer :initialValue="brainstorm.message" />
+  <EditViewer
+    :initialValue="brainstorm.message"
+    :editValue="koreroStore.editConversation(currentConversation?.id)"
+  />
 
   <template v-if="pastDue">
     <HeadingTwo class="pt-4">Messages</HeadingTwo>
@@ -46,7 +49,7 @@ const canWrite = computed(() => {
   </template>
 
   <template v-else>
-    <ToastUiViewer v-for="message in myMessages" :key="message.id" :initialValue="message.text" />
+    <ChatMessage v-for="message in myMessages" :key="message.id" :message="message" />
   </template>
 
   <MessageForm

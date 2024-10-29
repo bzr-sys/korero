@@ -34,7 +34,8 @@ async function postMessage() {
   await koreroStore.createMessage({
     conversationId: koreroStore.currentConversation.id,
     type: MessageType.COMMENT,
-    text: message.value
+    text: message.value,
+    editHistory: []
   })
   message.value = ''
   editor.value?.clearMarkdown()

@@ -62,11 +62,7 @@ const sortedAgenda = computed(() => {
 }) as ComputedRef<AgendaItem[]>
 
 async function approveAgendaItem(index: number) {
-  // console.log('approve')
-  // console.log(index)
-  // console.log(collabAgenda.value.items)
   const i = collabAgenda.value.items.findIndex((item) => item.index === index)
-  // console.log(i)
   if (i > -1) {
     collabAgenda.value.items[i].approved = true
     await koreroStore.updateConversation(meeting.value.id, {

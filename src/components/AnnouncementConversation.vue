@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
-import ToastUiViewer from '@/components/ToastUiViewer.vue'
+import EditViewer from '@/components/EditViewer.vue'
 import type { Announcement } from '@/types'
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
@@ -13,7 +13,10 @@ const announcement = computed(() => currentConversation.value as Announcement)
 </script>
 
 <template>
-  <ToastUiViewer :initialValue="announcement.message" />
+  <EditViewer
+    :initialValue="announcement.message"
+    :editValue="koreroStore.editConversation(currentConversation?.id)"
+  />
 </template>
 
 <style></style>

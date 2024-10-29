@@ -45,6 +45,7 @@ async function createConversation() {
     //
     reactions: [],
     message: message.value,
+    editHistory: [],
     //
     type: chosenType.value,
     group: koreroStore.currentChannel.group

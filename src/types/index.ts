@@ -43,6 +43,12 @@ export type ConversationCommon = Doc & {
   // do all types have a message?
   message: string
 
+  editHistory: {
+    authorId: string
+    ts: DatetimeLocalInputString // Before ts this was the message
+    message: string
+  }[]
+
   // Needed for permissions. This is problematic as it should be evident due to channel association.
   group: string
 }
@@ -124,6 +130,11 @@ export type Message = Doc & {
   authorId: string
   type: MessageType
   text: string
+  editHistory: {
+    authorId: string
+    ts: DatetimeLocalInputString // Before ts this was the message
+    text: string
+  }[]
 
   group: string
 }

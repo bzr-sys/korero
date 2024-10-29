@@ -12,12 +12,14 @@ const props = withDefaults(
     height?: string
     initialEditType?: EditorType
     validationError?: string
+    initialValue?: string
   }>(),
   {
     label: '',
     height: '500px',
     initialEditType: 'markdown',
-    validationError: ''
+    validationError: '',
+    initialValue: ''
   }
 )
 
@@ -31,6 +33,7 @@ onMounted(() => {
     height: props.height,
     minHeight: '100px',
     initialEditType: props.initialEditType,
+    initialValue: props.initialValue,
     previewStyle: 'tab',
     usageStatistics: false,
     autofocus: false,

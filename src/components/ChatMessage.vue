@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ToastUiViewer from '@/components/ToastUiViewer.vue'
+import EditViewer from '@/components/EditViewer.vue'
 import FormatDateString from '@/components/FormatDateString.vue'
 import type { Message } from '@/types'
 import { useKoreroStore } from '@/stores/korero'
@@ -18,7 +18,7 @@ const koreroStore = useKoreroStore()
       <FormatDateString :dateString="message.created" :defaultCss="false" />
     </div>
 
-    <ToastUiViewer :initialValue="message.text" />
+    <EditViewer :initialValue="message.text" :editValue="koreroStore.editMessage(message.id)" />
   </div>
 </template>
 
