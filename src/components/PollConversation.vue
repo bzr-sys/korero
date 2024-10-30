@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useKoreroStore } from '@/stores/korero'
-import ToastUiViewer from '@/components/ToastUiViewer.vue'
+import EditViewer from '@/components/EditViewer.vue'
 import DueDate from './DueDate.vue'
 import BaseLegend from './BaseLegend.vue'
 import HeadingTwo from './HeadingTwo.vue'
@@ -61,7 +61,10 @@ async function votePoll() {
 <template>
   <DueDate label="Vote by" :dateString="poll.due" />
 
-  <ToastUiViewer :initialValue="poll.message" class="mb-4" />
+  <EditViewer
+    :initialValue="poll.message"
+    :editValue="koreroStore.editConversation(currentConversation?.id)"
+  />
 
   <!-- if due date in future -->
   <template v-if="new Date(poll.due) > new Date()">

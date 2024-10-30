@@ -118,7 +118,6 @@ export const useKoreroStore = defineStore('korero', () => {
   const configCollection = bzr.collection<Config>(CONFIG_COLLECTION)
 
   async function autoSignIn() {
-    console.log('autosignin:', bzr.isLoggedIn())
     if (bzr.isLoggedIn()) {
       try {
         // TODO get all entities that can have channels (user, org, teams?)
@@ -237,9 +236,9 @@ export const useKoreroStore = defineStore('korero', () => {
       const configId = await configCollection.insertOne(newConfig)
       config = { id: configId, ...newConfig }
     }
-    await setState(config)
     await syncChannels()
     await syncConversations()
+    await setState(config)
   }
 
   //
@@ -343,6 +342,27 @@ export const useKoreroStore = defineStore('korero', () => {
     }
   }
 
+  function editConversation(conversationId: string | undefined) {
+    return async (text: string) => {
+      if (!currentConversation.value || currentConversation.value.id !== conversationId) {
+        return
+      }
+      if (state.value) {
+        const history = currentConversation.value.editHistory || []
+        history.push({
+          authorId: user.value.id,
+          ts: dateStrToISO(),
+          message: currentConversation.value.message
+        })
+        await state.value.conversationCollection.updateOne(conversationId, {
+          message: text,
+          editHistory: history
+        })
+        return
+      }
+    }
+  }
+
   //
   // Load and manage messages in a conversation
   //
@@ -412,6 +432,30 @@ export const useKoreroStore = defineStore('korero', () => {
     }
 
     return state.value.messageCollection.insertOne(newMessage)
+  }
+
+  function editMessage(messageId: string) {
+    return async (text: string) => {
+      if (!state.value) {
+        return
+      }
+      const message = await state.value.messageCollection.getOne(messageId)
+      if (!message) {
+        return
+      }
+
+      const history = message.editHistory || []
+      history.push({
+        authorId: user.value.id,
+        ts: dateStrToISO(),
+        text: message.text
+      })
+      await state.value.messageCollection.updateOne(messageId, {
+        text: text,
+        editHistory: history
+      })
+      return
+    }
   }
 
   async function cacheUser(userId: string): Promise<void> {
@@ -508,6 +552,7 @@ export const useKoreroStore = defineStore('korero', () => {
     // addMember,
 
     createConversation,
+    editConversation,
 
     // Conversation view
     currentConversation,
@@ -515,6 +560,7 @@ export const useKoreroStore = defineStore('korero', () => {
     orderedMessages,
     setConversation,
     createMessage,
+    editMessage,
     updateConversation
   }
 })

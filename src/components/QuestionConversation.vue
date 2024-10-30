@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import { useKoreroStore } from '@/stores/korero'
-import ToastUiViewer from '@/components/ToastUiViewer.vue'
+import EditViewer from '@/components/EditViewer.vue'
 import HeadingTwo from '@/components/HeadingTwo.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import MessageForm from '@/components/MessageForm.vue'
@@ -33,7 +33,10 @@ const chosenAnswer = computed<Message | undefined>(() => {
     <ValidationError>Conversation type is not <strong>question</strong>!</ValidationError>
   </template>
   <template v-else>
-    <ToastUiViewer :initialValue="question.message" />
+    <EditViewer
+      :initialValue="question.message"
+      :editValue="koreroStore.editConversation(currentConversation?.id)"
+    />
 
     <div v-if="chosenAnswer" class="pt-8">
       <ChatMessage :message="chosenAnswer" />

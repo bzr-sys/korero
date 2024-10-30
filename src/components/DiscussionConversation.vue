@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
 import HeadingTwo from '@/components/HeadingTwo.vue'
-import ToastUiViewer from '@/components/ToastUiViewer.vue'
+import EditViewer from '@/components/EditViewer.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import MessageForm from '@/components/MessageForm.vue'
 import { getPluralEnding } from '@/utils/getPluralEnding'
@@ -17,7 +17,10 @@ const discussion = computed(() => currentConversation.value as Discussion)
 </script>
 
 <template>
-  <ToastUiViewer :initialValue="discussion.message" />
+  <EditViewer
+    :initialValue="discussion.message"
+    :editValue="koreroStore.editConversation(currentConversation?.id)"
+  />
 
   <HeadingTwo class="pt-4"
     >{{ orderedMessages.length }} Comment{{ getPluralEnding(orderedMessages) }}</HeadingTwo
