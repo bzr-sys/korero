@@ -69,7 +69,12 @@ onUnmounted(() => {
     <div class="px-4 py-2 h-12 flex justify-between gap-4 items-center">
       <!-- left -->
       <div class="flex flex-row-reverse gap-4 items-center">
-        <RouterLink :to="{ name: 'home' }"> <LogoTextSVG width="100px" /></RouterLink>
+        <RouterLink :to="{ name: 'home' }" class="relative flex gap-3">
+          <LogoTextSVG width="130px" />
+          <span class="absolute bottom-[5px] right-0 translate-y-full text-[0.6rem]"
+            >Powered by Bazaar</span
+          >
+        </RouterLink>
         <button
           @click="koreroStore.toggleSideBarExpanded"
           :aria-expanded="isSideBarExpanded"
