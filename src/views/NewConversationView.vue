@@ -9,15 +9,7 @@ import DateInput from '@/components/DateInput.vue'
 import SmallContainer from '@/components/SmallContainer.vue'
 import ConversationTypeIcon from '@/components/ConversationTypeIcon.vue'
 import { ConversationType, Agency } from '@/types'
-import type {
-  Meeting,
-  Poll,
-  Brainstorm,
-  Conversation,
-  OwnerAgenda,
-  CollabAgenda,
-  Agenda
-} from '@/types'
+import type { Meeting, Poll, Brainstorm, Conversation, Agenda } from '@/types'
 import { dateStrToISO } from '@/date'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -102,7 +94,7 @@ async function createConversation() {
         const endTs = new Date(startTs).setHours(startTs.getHours() + 1)
         try {
           // @ts-ignore
-          await bzr.email.sendEvent({
+          await bzr.email.sendCalendarInvite({
             userIds: group.members,
             eventName: c.title,
             message:
