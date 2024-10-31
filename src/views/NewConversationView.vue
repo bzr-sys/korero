@@ -332,7 +332,7 @@ const sendInvitation = ref(true)
             </fieldset>
             <div v-if="notEmailSender">
               <p class="text-sm text-red-400">
-                You are not verified to send email. We semt you an email with a confirmation link.
+                You are not verified to send email. We sent you an email with a confirmation link.
                 Please confirm your email and try again.
               </p>
             </div>
