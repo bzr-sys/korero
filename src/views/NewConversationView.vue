@@ -9,10 +9,12 @@ import DateInput from '@/components/DateInput.vue'
 import SmallContainer from '@/components/SmallContainer.vue'
 import ConversationTypeIcon from '@/components/ConversationTypeIcon.vue'
 import { ConversationType, Agency } from '@/types'
-import type { Meeting, Poll, Brainstorm, Conversation, OwnerAgenda, CollabAgenda } from '@/types'
+import type { Meeting, Poll, Brainstorm, Conversation, Agenda } from '@/types'
 import { dateStrToISO } from '@/date'
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { bzr } from '@/bazaar'
+import { isNoPermissionError } from '@bzr/bazaar'
 
 const route = useRoute()
 const router = useRouter()
@@ -51,45 +53,67 @@ async function createConversation() {
     group: koreroStore.currentChannel.group
   }
   switch (chosenType.value) {
-    case ConversationType.MEETING:
+    case ConversationType.MEETING: {
       // TODO collabAgenda `due` should be before meeting `date`
-      if (agendaSetting.value === Agency.OWNER) {
-        const ownerAgenda: OwnerAgenda = {
-          setting: Agency.OWNER,
-          text: agendaText.value
-        }
-        const ownerMeeting: Omit<Meeting, 'id'> = {
-          ...c,
-          type: ConversationType.MEETING,
-          date: dateStrToISO(meetingDate.value),
-          agenda: ownerAgenda
-        }
-        c = ownerMeeting
-      }
-      if (agendaSetting.value === Agency.COLLAB) {
-        const collabAgenda: CollabAgenda = {
-          setting: agendaSetting.value,
-          decision: agendaDecision.value,
-          items: agendaItems.value.map((item, index) => {
-            return {
-              index,
-              title: item.title,
-              text: item.text,
-              approved: false,
-              votes: []
+      const agenda: Agenda =
+        agendaSetting.value === Agency.OWNER
+          ? {
+              setting: Agency.OWNER,
+              text: agendaText.value
             }
-          }),
-          due: dateStrToISO(due.value)
+          : {
+              setting: agendaSetting.value,
+              decision: agendaDecision.value,
+              items: agendaItems.value.map((item, index) => {
+                return {
+                  index,
+                  title: item.title,
+                  text: item.text,
+                  approved: false,
+                  votes: []
+                }
+              }),
+              due: dateStrToISO(due.value)
+            }
+      const meeting: Omit<Meeting, 'id'> = {
+        ...c,
+        type: ConversationType.MEETING,
+        date: dateStrToISO(meetingDate.value),
+        agenda: agenda
+      }
+      c = meeting
+
+      // Send email invitations
+      if (sendInvitation.value) {
+        const group = koreroStore.getGroup(koreroStore.currentChannel.group)
+        if (!group.id) {
+          console.log('Error: no channel members')
+          return
         }
-        const collabMeeting: Omit<Meeting, 'id'> = {
-          ...c,
-          type: ConversationType.MEETING,
-          date: dateStrToISO(meetingDate.value),
-          agenda: collabAgenda
+        const startTs = new Date(meetingDate.value)
+        const endTs = new Date(startTs).setHours(startTs.getHours() + 1)
+        try {
+          // @ts-ignore
+          await bzr.email.sendCalendarInvite({
+            userIds: group.members,
+            eventName: c.title,
+            message:
+              c.message ||
+              (agenda.setting === Agency.OWNER
+                ? agenda.text
+                : 'Agenda will be determined collaboratively.'),
+            startTs: startTs,
+            endTs: endTs // TODO requires user set end time
+          })
+        } catch (err) {
+          if (isNoPermissionError(err)) {
+            notEmailSender.value = true
+            return
+          }
         }
-        c = collabMeeting
       }
       break
+    }
     case ConversationType.POLL: {
       const poll: Omit<Poll, 'id'> = {
         ...c,
@@ -168,6 +192,8 @@ const agendaItems = ref([{ ...emptyAgendaItem }])
 const due = ref('')
 const meetingDate = ref('')
 const messageValidationError = ref('')
+const notEmailSender = ref(false)
+const sendInvitation = ref(true)
 </script>
 
 <template>
@@ -299,6 +325,17 @@ const messageValidationError = ref('')
                 </button>
               </fieldset>
             </template>
+
+            <fieldset class="pt-2">
+              <input type="checkbox" v-model="sendInvitation" id="send_invites" />
+              <label for="send_invites" class="pl-2">Send invitations per email</label>
+            </fieldset>
+            <div v-if="notEmailSender">
+              <p class="text-sm text-red-400">
+                You are not verified to send email. We sent you an email with a confirmation link.
+                Please confirm your email and try again.
+              </p>
+            </div>
           </div>
 
           <!-- POLL -->
