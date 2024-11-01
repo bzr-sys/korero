@@ -12,8 +12,11 @@ function login(): void {
 <template>
   <div class="grid min-h-full grid-rows-[auto_1fr_auto] px-8 max-w-7xl mx-auto">
     <header class="sticky flex py-8">
-      <a href="https://koreroapp.com/">
+      <a href="https://koreroapp.com/" class="relative flex gap-3">
         <LogoTextSVG width="130px" />
+        <span class="absolute bottom-0 right-0 translate-y-full text-[0.6rem]">
+          Powered by Bazaar
+        </span>
       </a>
     </header>
 
