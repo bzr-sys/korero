@@ -143,6 +143,7 @@ async function createConversation() {
       break
   }
   const conversationId = await koreroStore.createConversation(c)
+  await koreroStore.syncConversations()
   router.push({ name: 'conversation', params: { conversationId } })
 }
 

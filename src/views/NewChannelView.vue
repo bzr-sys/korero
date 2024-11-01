@@ -6,6 +6,7 @@ import { useKoreroStore } from '@/stores/korero'
 import { storeToRefs } from 'pinia'
 import { ref, type Ref } from 'vue'
 import { useRouter } from 'vue-router'
+import ManageChannelMembers from '@/components/ManageChannelMembers.vue'
 
 const koreroStore = useKoreroStore()
 
@@ -42,7 +43,15 @@ async function createChannel() {
       <HeadingOne class="mb-4">Create a new <span class="text-accent">channel</span></HeadingOne>
       <form @submit.prevent="createChannel">
         <TextInput label="Channel name" v-model="channelName" />
-        <button class="btn btn-accent">Create channel</button>
+        <div class="font-bold">Members</div>
+        <ManageChannelMembers
+          :initialMembers="selectedMembers"
+          @update:addMember="(id) => selectedMembers.push(id)"
+          @update:removeMember="(id) => (selectedMembers = selectedMembers.filter((m) => m !== id))"
+        />
+        <div class="mt-8">
+          <button class="btn btn-accent">Create channel</button>
+        </div>
       </form>
     </div>
   </SmallContainer>

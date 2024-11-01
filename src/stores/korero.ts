@@ -561,6 +561,7 @@ export const useKoreroStore = defineStore('korero', () => {
     setConversation,
     createMessage,
     editMessage,
-    updateConversation
+    updateConversation,
+    syncConversations
   }
 })

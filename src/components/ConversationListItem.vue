@@ -13,7 +13,7 @@ const koreroStore = useKoreroStore()
 </script>
 
 <template>
-  <div class="flex gap-4 items-center">
+  <li class="flex gap-4 items-center">
     <ConversationTypeIcon :type="conversation.type" class="flex-shrink-0" :width="iconWidth" />
     <div>
       <h2 class="card-title">
@@ -32,7 +32,7 @@ const koreroStore = useKoreroStore()
         >
       </div>
     </div>
-  </div>
+  </li>
 </template>
 
 <style scoped></style>

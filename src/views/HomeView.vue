@@ -6,7 +6,7 @@ import SmallContainer from '@/components/SmallContainer.vue'
 import { storeToRefs } from 'pinia'
 
 const koreroStore = useKoreroStore()
-const { user, currentWorkspace, channels, currentChannel } = storeToRefs(koreroStore)
+const { currentWorkspace, channels, currentChannel } = storeToRefs(koreroStore)
 
 // Sync on each visit since subscription does not work: https://github.com/bzr-sys/bazaar-server/issues/181
 koreroStore.syncChannels()
@@ -31,8 +31,8 @@ function getGreeting() {
   <HeadingOne>Home</HeadingOne>
   <div class="text-center pt-8 py-8">
     <div class="text-4xl">{{ getGreeting() }}</div>
-    <div class="text-lg">@{{ user.handle }}</div>
-    <div v-if="currentWorkspace" class="opacity-70 text-sm">{{ currentWorkspace.name }}</div>
+    <div class="text-lg">{{ currentWorkspace?.name }}</div>
+    <div class="opacity-70 text-sm">@{{ currentWorkspace?.handle }}</div>
   </div>
 
   <SmallContainer v-if="channels.length === 0">
