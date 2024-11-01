@@ -1,57 +1,20 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
 import HeadingOne from './HeadingOne.vue'
-import BazaarLogoIcon from './BazaarLogoIcon.vue'
-import { ref, watch } from 'vue'
 import { bzr } from '@/bazaar'
-import { useRoute, useRouter, type RouteLocationNormalizedLoadedGeneric } from 'vue-router'
-import AlertSVG from './AlertSVG.vue'
 import { storeToRefs } from 'pinia'
 
-const route = useRoute()
-const router = useRouter()
-
 const koreroStore = useKoreroStore()
-const { hasCompletedOnboarding, activeOrgs, user } = storeToRefs(koreroStore)
-
-const START = 'start'
-const CREATE_ORG = 'create-org'
-const JOIN_ORG = 'join-org'
-const USE_ORG = 'use-org'
-
-const currentStep = ref(START)
-const noActiveOrgAfterModalClose = ref(false)
-
-function setStepFromRoute(route: RouteLocationNormalizedLoadedGeneric): void {
-  if (!route.query.step) return
-  currentStep.value = route.query.step as string
-  resetNotices()
-}
-
-function resetNotices(): void {
-  noActiveOrgAfterModalClose.value = false
-}
-
-// Set step on page load
-setStepFromRoute(route)
-
-// Set step interaction
-watch(route, setStepFromRoute)
+const { hasCompletedOnboarding, orgs, user } = storeToRefs(koreroStore)
 
 function openOrgModal() {
   // @ts-ignore
   bzr.orgs.openModal(null, async () => {
-    resetNotices()
     await koreroStore.setOrgs()
-    if (activeOrgs.value.length > 0) {
-      router.push({ name: 'home', query: { step: USE_ORG } })
-    } else {
-      noActiveOrgAfterModalClose.value = true
-    }
   })
 }
 
-function handleJustForMe(): void {
+function handleUsePersonal(): void {
   koreroStore.setTeam(user.value.id)
 }
 
@@ -62,113 +25,52 @@ function handleUseOrg(orgPrimaryTeamId: string): void {
 
 <template>
   <div class="overflow-y-auto">
-    <div v-if="!hasCompletedOnboarding" class="text-center py-12 px-4 w-[300px] mx-auto">
-      <HeadingOne>Welcome!</HeadingOne>
+    <div v-if="!hasCompletedOnboarding" class="py-12 px-4 max-w-[450px] mx-auto">
+      <div class="text-center">
+        <HeadingOne className="text-4xl">Welcome!</HeadingOne>
+        <div class="text-lg pb-8 opacity-70">Choose a workspace</div>
+      </div>
 
-      <Transition name="slide-fade" mode="out-in">
-        <!-- Steps -->
-
-        <!-- START -->
-        <div v-if="currentStep === START" class="flex flex-col gap-4">
-          <div class="text-lg pt-1 pb-6 opacity-70">How will you use Korero?</div>
-
-          <div v-if="activeOrgs.length > 0">
-            <RouterLink
-              :to="{ name: 'home', query: { step: USE_ORG } }"
-              class="btn btn-lg btn-block"
-              >Select an organization</RouterLink
+      <div v-if="orgs.length < 1" class="text-center">
+        <button @click="openOrgModal" class="btn btn-accent">Create your first organization</button>
+      </div>
+      <div v-else>
+        <div class="flex justify-between gap-4 items-center pb-2">
+          <h2 class="text-left font-bold">My organizations</h2>
+          <button @click="openOrgModal" class="btn btn-xs">Create organization</button>
+        </div>
+        <div class="py-4 px-6 rounded border border-slate-200">
+          <ul class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+            <li
+              v-for="org in orgs"
+              :key="org.id"
+              class="grid grid-flow-row max-sm:gap-3 sm:grid-flow-col sm:grid-cols-subgrid sm:col-span-5 items-center [&:not(:last-child)]:border-b border-slate-200 [&:not(:last-child)]:pb-4"
             >
-          </div>
-          <template v-else>
-            <div>
-              <RouterLink
-                :to="{ name: 'home', query: { step: CREATE_ORG } }"
-                class="btn btn-lg btn-block"
-                >Create an organization</RouterLink
-              >
-            </div>
-            <div>
-              <RouterLink
-                :to="{ name: 'home', query: { step: JOIN_ORG } }"
-                class="btn btn-lg btn-block"
-                >Join an organization</RouterLink
-              >
-            </div>
-          </template>
-
-          <div>
-            <button @click="handleJustForMe" class="btn btn-md btn-block btn-ghost">
-              Just for me
-            </button>
-          </div>
-        </div>
-
-        <!-- CREATE_ORG -->
-        <div v-else-if="currentStep === CREATE_ORG" class="flex flex-col gap-4">
-          <div class="text-lg pt-1 pb-6 opacity-70">Create a Bazaar organization</div>
-          <button @click="openOrgModal" class="btn btn-lg">
-            <BazaarLogoIcon width="20px" /> Manage Organizations
-          </button>
-          <div role="alert" class="alert alert-warning" v-if="noActiveOrgAfterModalClose">
-            <AlertSVG />
-            <span>Make sure you have at least one organization with an active subscription</span>
-          </div>
-          <ol class="list-decimal text-left marker:font-bold pl-8">
-            <li>Open the Manage Organizations modal</li>
-            <li>Click "Create Organization"</li>
-            <li>Create an organization</li>
-            <li>Click "Activate"</li>
-            <li>Choose a plan and subscribe</li>
-            <li>
-              Close the modal, then
-              <button @click="currentStep = USE_ORG" class="link underline text-primary">
-                select your organization &rarr;
-              </button>
-            </li>
-          </ol>
-        </div>
-
-        <!-- JOIN_ORG -->
-        <div v-else-if="currentStep === JOIN_ORG" class="flex flex-col gap-4">
-          <div class="text-lg pt-1 pb-6 opacity-70">Search for an organization to join</div>
-          <button @click="openOrgModal" class="btn btn-lg">
-            <BazaarLogoIcon width="20px" /> Manage Organizations
-          </button>
-          <ol class="list-decimal text-left marker:font-bold text-sm pl-4 flex flex-col gap-1 pt-2">
-            <li>Open the Manage Organizations modal</li>
-            <li>Search for an organization</li>
-            <li>Select the found organization</li>
-            <li>Click "Request Membership"</li>
-            <li>Close the modal</li>
-            <li>
-              When your request is accepted,
-              <button @click="currentStep = USE_ORG" class="link underline text-primary">
-                select your organization &rarr;
-              </button>
-            </li>
-          </ol>
-        </div>
-
-        <!-- USE_ORG -->
-        <div v-else-if="currentStep === USE_ORG">
-          <div class="text-lg pt-1 pb-6 opacity-70">Select an organization</div>
-
-          <ul class="flex flex-col gap-2">
-            <li v-for="org in activeOrgs" :key="org.id">
-              <button @click="handleUseOrg(org.primaryTeam.id)" class="btn btn-md btn-block">
-                <div class="truncate h-[15px]">{{ org.name }}</div>
-              </button>
+              <div class="sm:col-span-3">
+                <div class="card-title">{{ org.name }}</div>
+                <div class="italic text-xs">@{{ org.handle }}</div>
+              </div>
+              <div class="sm:col-span-2">
+                <button
+                  v-if="org.active"
+                  @click="handleUseOrg(org.primaryTeam.id)"
+                  class="btn btn-sm btn-accent btn-block"
+                >
+                  Choose
+                </button>
+                <button v-else @click="openOrgModal" class="btn btn-sm btn-warning btn-block">
+                  Get subscription
+                </button>
+              </div>
             </li>
           </ul>
         </div>
-      </Transition>
-      <div class="mt-8">
-        <RouterLink
-          v-if="!currentStep || currentStep !== START"
-          :to="{ name: 'home', query: { step: START } }"
-          class="btn btn-link"
-          >Back to start</RouterLink
-        >
+      </div>
+
+      <div class="pt-4">
+        <button @click="handleUsePersonal" class="btn btn-md btn-block btn-ghost">
+          Or, choose personal use
+        </button>
       </div>
     </div>
   </div>

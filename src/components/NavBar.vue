@@ -117,8 +117,8 @@ onUnmounted(() => {
 
           <div v-if="currentWorkspace" class="px-4 pb-6">
             <div class="text-xs opacity-70">Current workspace</div>
-            {{ currentWorkspace.name }}
-            <!-- single use, double user icon -->
+            <div>{{ currentWorkspace.name }}</div>
+            <div class="text-xs opacity-70">@{{ currentWorkspace.handle }}</div>
           </div>
 
           <ul class="py-1 border-t border-slate-200" @click="closeUserDropdown">

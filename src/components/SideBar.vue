@@ -33,6 +33,14 @@ function openOrgModal() {
           ><HomeSVG width="18px" /> Home</RouterLink
         >
       </li>
+      <li>
+        <button
+          @click="openOrgModal()"
+          class="flex gap-2 items-center hover:bg-slate-200 w-full px-4 py-2 rounded"
+        >
+          <BazaarLogoIcon width="18px" /> Invite teammates
+        </button>
+      </li>
     </ul>
     <!-- channels nav -->
     <div class="p-4 relative min-h-px flex-1">
@@ -72,11 +80,7 @@ function openOrgModal() {
       </div>
     </div>
     <!-- bottom sidebar actions -->
-    <div class="p-4 border-t border-slate-200">
-      <button @click="openOrgModal()" class="btn btn-sm btn-block">
-        <BazaarLogoIcon width="12px" /> Invite teammates
-      </button>
-    </div>
+    <div class="p-4 border-t border-slate-200"></div>
   </aside>
 </template>
 
