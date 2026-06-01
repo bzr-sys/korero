@@ -8,7 +8,7 @@ const koreroStore = useKoreroStore()
 const { hasCompletedOnboarding, orgs, user } = storeToRefs(koreroStore)
 
 function openOrgModal() {
-  // @ts-ignore
+  // @ts-expect-error Bazaar SDK type mismatch
   bzr.orgs.openModal(null, async () => {
     await koreroStore.setOrgs()
   })

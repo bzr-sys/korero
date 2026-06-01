@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// @ts-ignore Complains about editor types and I was unable to find a solution
 import Editor from '@toast-ui/editor'
 import '@toast-ui/editor/dist/toastui-editor.css'
-import type { EditorType } from 'node_modules/@toast-ui/editor/types'
+import type { EditorType } from '@toast-ui/editor'
 import { onMounted, ref, watch } from 'vue'
 import ValidationError from '@/components/ValidationError.vue'
 

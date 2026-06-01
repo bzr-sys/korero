@@ -12,7 +12,7 @@ const koreroStore = useKoreroStore()
 const { channels, currentChannel, isSideBarExpanded } = storeToRefs(koreroStore)
 
 function openOrgModal() {
-  // @ts-ignore
+  // @ts-expect-error Bazaar SDK type mismatch
   bzr.orgs.openModal(null, () => koreroStore.setOrgs())
 }
 </script>
