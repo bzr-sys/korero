@@ -60,12 +60,6 @@ function openOrgModal() {
         >
           Current workspace
         </div>
-        <template v-else-if="!org.active">
-          <button v-if="org.admins.includes(user.id)" @click="openOrgModal()" class="text-xs">
-            <span class="text-warning">&rarr;</span> Get Subscription
-          </button>
-          <span v-else class="text-xs opacity-70 text-error font-bold">Inactive</span>
-        </template>
         <button
           v-else
           @click="koreroStore.setTeam(org.primaryTeam.id)"
@@ -73,6 +67,15 @@ function openOrgModal() {
         >
           <SwitchSVG width="12px" /> <span>Switch workspace</span>
         </button>
+        <!-- `active` is "subscription status is active", not "workspace exists". -->
+        <button
+          v-if="!org.active && org.admins?.includes(user.id)"
+          @click="openOrgModal()"
+          class="text-xs"
+        >
+          <span class="text-warning">&rarr;</span> Get Subscription
+        </button>
+        <span v-else-if="!org.active" class="text-xs opacity-70">No active subscription</span>
         <div class="capitalize font-bold">{{ org.name }}</div>
         <div class="opacity-70 text-sm">@{{ org.handle }}</div>
       </div>

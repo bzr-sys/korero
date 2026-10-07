@@ -52,15 +52,12 @@ function handleUseOrg(orgPrimaryTeamId: string): void {
               </div>
               <div class="sm:col-span-2">
                 <button
-                  v-if="org.active"
                   @click="handleUseOrg(org.primaryTeam.id)"
                   class="btn btn-sm btn-accent btn-block"
                 >
                   Choose
                 </button>
-                <button v-else @click="openOrgModal" class="btn btn-sm btn-warning btn-block">
-                  Get subscription
-                </button>
+                <p v-if="!org.active" class="text-xs opacity-70 pt-1">No active subscription</p>
               </div>
             </li>
           </ul>
