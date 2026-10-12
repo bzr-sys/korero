@@ -50,7 +50,7 @@ async function voteAgendaItem(index: number) {
 }
 
 const sortedAgenda = computed(() => {
-  // @ts-ignore Not sure how to get toSorted to pass ts check
+  // @ts-expect-error toSorted type not recognized
   return meeting.value.agenda.items.toSorted((a: AgendaItem, b: AgendaItem) => {
     if (a.approved && !b.approved) return -1
     if (!a.approved && b.approved) return 1

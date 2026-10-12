@@ -47,7 +47,7 @@ async function votePoll() {
       : 'Choose an option'
     return
   }
-  for (let i in poll.value.items) {
+  for (const i in poll.value.items) {
     if (poll.value.items[i].index === chosenOption.value || checkedOption.value[i]) {
       poll.value.items[i].votes.push(user.value.id)
     }

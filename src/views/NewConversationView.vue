@@ -93,7 +93,7 @@ async function createConversation() {
         const startTs = new Date(meetingDate.value)
         const endTs = new Date(startTs).setHours(startTs.getHours() + 1)
         try {
-          // @ts-ignore
+          // @ts-expect-error Bazaar SDK type mismatch
           await bzr.email.sendCalendarInvite({
             userIds: group.members,
             eventName: c.title,

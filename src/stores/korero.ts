@@ -4,7 +4,6 @@ import { defineStore } from 'pinia'
 import { bzr } from '@/bazaar'
 import {
   arrayMirrorSubscribeListener,
-  type BazaarMessage,
   type DeepPartial,
   type User,
   type Org,
@@ -65,7 +64,7 @@ export const useKoreroStore = defineStore('korero', () => {
   const groups: Ref<{ [key: string]: PermissionGroup }> = ref({})
 
   async function setOrgs() {
-    // @ts-ignore
+    // @ts-expect-error Bazaar SDK type mismatch
     orgs.value = await bzr.orgs.list()
   }
 
@@ -134,7 +133,7 @@ export const useKoreroStore = defineStore('korero', () => {
         }
 
         // Get orgs
-        // @ts-ignore
+        // @ts-expect-error Bazaar SDK type mismatch
         orgs.value = await bzr.orgs.list()
 
         authenticated.value = true
@@ -210,6 +209,7 @@ export const useKoreroStore = defineStore('korero', () => {
             },
             noSharingNotification
           )
+          // TODO create permission to create backlinks
         }
       })
     }
@@ -262,7 +262,7 @@ export const useKoreroStore = defineStore('korero', () => {
     }
     // Create group
     const newGroup = { label: 'channel-' + name, members: members }
-    // @ts-ignore
+    // @ts-expect-error Bazaar SDK type mismatch
     const { id } = await state.value.bzr.permissions.groups.create(newGroup)
     groups.value[id] = { id, ...newGroup }
 
@@ -283,7 +283,7 @@ export const useKoreroStore = defineStore('korero', () => {
   //
 
   const conversations: Ref<Conversation[]> = ref([])
-  let unsubscribeConversations: (() => Promise<BazaarMessage>) | undefined = undefined
+  let unsubscribeConversations: (() => Promise<string>) | undefined = undefined
 
   async function syncConversations() {
     if (!state.value) {
@@ -315,7 +315,7 @@ export const useKoreroStore = defineStore('korero', () => {
     })
 
     if (!currentChannel.value) {
-      currentChannel.value = await state.value.channelCollection.getOne(id)
+      currentChannel.value = (await state.value.channelCollection.getOne(id)) ?? undefined
     }
   }
 
@@ -368,7 +368,7 @@ export const useKoreroStore = defineStore('korero', () => {
   //
 
   const currentConversation = ref(undefined as Conversation | undefined)
-  let unsubscribeConversation: (() => Promise<BazaarMessage>) | undefined = undefined
+  let unsubscribeConversation: (() => Promise<string>) | undefined = undefined
 
   const messages = ref([] as Message[])
 
@@ -376,7 +376,7 @@ export const useKoreroStore = defineStore('korero', () => {
     messages.value.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime())
   )
 
-  let unsubscribeMessages: (() => Promise<BazaarMessage>) | undefined = undefined
+  let unsubscribeMessages: (() => Promise<string>) | undefined = undefined
 
   async function setConversation(id: string) {
     if (!state.value) {
@@ -398,8 +398,11 @@ export const useKoreroStore = defineStore('korero', () => {
     })
 
     if (!currentConversation.value) {
-      currentConversation.value = await state.value.conversationCollection.getOne(id)
+      currentConversation.value =
+        (await state.value.conversationCollection.getOne(id)) ?? undefined
     }
+
+    if (!currentConversation.value) return
 
     setChannel(currentConversation.value.channelId)
 
@@ -474,7 +477,7 @@ export const useKoreroStore = defineStore('korero', () => {
     }
     const cachedGroup = groups.value[groupId]
     if (!cachedGroup) {
-      // @ts-ignore
+      // @ts-expect-error Bazaar SDK type mismatch
       const fetchedGroup = await state.value.bzr.permissions.groups.get(groupId)
       if (fetchedGroup) {
         groups.value[fetchedGroup.id] = fetchedGroup
@@ -486,9 +489,9 @@ export const useKoreroStore = defineStore('korero', () => {
     if (!state.value) {
       return
     }
-    // @ts-ignore
+    // @ts-expect-error Bazaar SDK type mismatch
     await state.value.bzr.permissions.groups.addMember(groupId, memberId)
-    // @ts-ignore
+    // @ts-expect-error Bazaar SDK type mismatch
     const newGroup = await state.value.bzr.permissions.groups.get(groupId)
 
     if (newGroup) {
@@ -500,9 +503,9 @@ export const useKoreroStore = defineStore('korero', () => {
     if (!state.value) {
       return
     }
-    // @ts-ignore
+    // @ts-expect-error Bazaar SDK type mismatch
     await state.value.bzr.permissions.groups.removeMember(groupId, memberId)
-    // @ts-ignore
+    // @ts-expect-error Bazaar SDK type mismatch
     const newGroup = await state.value.bzr.permissions.groups.get(groupId)
 
     if (newGroup) {

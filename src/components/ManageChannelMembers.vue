@@ -12,8 +12,8 @@ const emit = defineEmits(['update:addMember', 'update:removeMember'])
 const koreroStore = useKoreroStore()
 
 function openOrgModal() {
-  // @ts-ignore
-  bzr.orgs.openModal()
+  // @ts-expect-error Bazaar SDK type mismatch
+  bzr.orgs.openPopup()
 }
 
 const { state, orgs, user } = storeToRefs(koreroStore)

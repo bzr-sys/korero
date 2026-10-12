@@ -62,30 +62,30 @@ export enum ConversationType {
   BRAINSTORM = 'brainstorm'
 }
 
-export interface Discussion extends ConversationCommon {
+export type Discussion = ConversationCommon & {
   type: ConversationType.DISCUSSION
 }
-export interface Meeting extends ConversationCommon {
+export type Meeting = ConversationCommon & {
   type: ConversationType.MEETING
   date: DatetimeLocalInputString
   agenda: Agenda
   notes?: string
 }
-export interface Question extends ConversationCommon {
+export type Question = ConversationCommon & {
   type: ConversationType.QUESTION
   /** Message ID of the selected answer */
   answerId?: string
 }
-export interface Announcement extends ConversationCommon {
+export type Announcement = ConversationCommon & {
   type: ConversationType.ANNOUNCEMENT
 }
-export interface Poll extends ConversationCommon {
+export type Poll = ConversationCommon & {
   type: ConversationType.POLL
   multipleAnswers: boolean
   items: PollItem[]
   due: DatetimeLocalInputString
 }
-export interface Brainstorm extends ConversationCommon {
+export type Brainstorm = ConversationCommon & {
   type: ConversationType.BRAINSTORM
   due: DatetimeLocalInputString
 }
@@ -102,7 +102,7 @@ export type CollabAgenda = {
 }
 export type Agenda = OwnerAgenda | CollabAgenda
 
-export interface AgendaItem {
+export type AgendaItem = {
   index: number
   title: string
   text: string
@@ -115,7 +115,7 @@ export enum Agency {
   COLLAB = 'collab'
 }
 
-export interface PollItem {
+export type PollItem = {
   index: number
   // title: string
   text: string
@@ -123,6 +123,60 @@ export interface PollItem {
 }
 
 export type Conversation = Discussion | Meeting | Question | Announcement | Poll | Brainstorm
+
+export type MessageCommon = Doc & {
+  conversationId: string
+  created: DatetimeLocalInputString
+  authorId: string
+  group: string
+}
+
+export enum MessageType {
+  COMMENT = 'comment',
+  POLL = 'poll',
+  LINK = 'link',
+  EVENT = 'event',
+  MEETING = 'meeting'
+}
+
+export type CommentMessage = MessageCommon & {
+  type: MessageType.COMMENT
+  text: string
+  editHistory: {
+    authorId: string
+    ts: DatetimeLocalInputString // Before ts this was the message
+    text: string
+  }[]
+}
+
+// For backlinks (mentions)
+export type LinkMessage = MessageCommon & {
+  type: MessageType.LINK
+  url: string
+  // ?
+}
+
+// For events such as a brainstorming deadline or meeting
+export type EventMessage = MessageCommon & {
+  type: MessageType.EVENT
+  text: string
+  // ?
+}
+
+export type PollMessage = MessageCommon & {
+  type: MessageType.POLL
+  multipleAnswers: boolean
+  items: PollItem[]
+  due: DatetimeLocalInputString
+  // ?
+}
+
+export type MeetingMessage = MessageCommon & {
+  type: MessageType.MEETING
+  date: DatetimeLocalInputString
+  notes?: string
+  // ?
+}
 
 export type Message = Doc & {
   conversationId: string
@@ -139,17 +193,10 @@ export type Message = Doc & {
   group: string
 }
 
-export enum MessageType {
-  COMMENT = 'comment',
-  POLL = 'poll',
-  LINK = 'link',
-  EVENT = 'event'
-}
-
 /**
  * A User or Org. The properties shared by both
  */
-export interface Workspace {
+export type Workspace = {
   id: string
   name: string
   handle: string

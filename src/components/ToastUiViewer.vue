@@ -9,7 +9,7 @@ const props = defineProps<{
 
 const viewer = ref()
 onMounted(() => {
-  const e = new Viewer({
+  new Viewer({
     el: viewer.value,
     usageStatistics: false,
     initialValue: props.initialValue
