@@ -13,7 +13,7 @@ const koreroStore = useKoreroStore()
 
 function openOrgModal() {
   // @ts-expect-error Bazaar SDK type mismatch
-  bzr.orgs.openModal()
+  bzr.orgs.openPopup()
 }
 
 const { state, orgs, user } = storeToRefs(koreroStore)

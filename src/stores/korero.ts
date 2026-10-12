@@ -4,7 +4,6 @@ import { defineStore } from 'pinia'
 import { bzr } from '@/bazaar'
 import {
   arrayMirrorSubscribeListener,
-  type BazaarMessage,
   type DeepPartial,
   type User,
   type Org,
@@ -284,7 +283,7 @@ export const useKoreroStore = defineStore('korero', () => {
   //
 
   const conversations: Ref<Conversation[]> = ref([])
-  let unsubscribeConversations: (() => Promise<BazaarMessage>) | undefined = undefined
+  let unsubscribeConversations: (() => Promise<string>) | undefined = undefined
 
   async function syncConversations() {
     if (!state.value) {
@@ -316,7 +315,7 @@ export const useKoreroStore = defineStore('korero', () => {
     })
 
     if (!currentChannel.value) {
-      currentChannel.value = await state.value.channelCollection.getOne(id)
+      currentChannel.value = (await state.value.channelCollection.getOne(id)) ?? undefined
     }
   }
 
@@ -369,7 +368,7 @@ export const useKoreroStore = defineStore('korero', () => {
   //
 
   const currentConversation = ref(undefined as Conversation | undefined)
-  let unsubscribeConversation: (() => Promise<BazaarMessage>) | undefined = undefined
+  let unsubscribeConversation: (() => Promise<string>) | undefined = undefined
 
   const messages = ref([] as Message[])
 
@@ -377,7 +376,7 @@ export const useKoreroStore = defineStore('korero', () => {
     messages.value.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime())
   )
 
-  let unsubscribeMessages: (() => Promise<BazaarMessage>) | undefined = undefined
+  let unsubscribeMessages: (() => Promise<string>) | undefined = undefined
 
   async function setConversation(id: string) {
     if (!state.value) {
@@ -399,8 +398,11 @@ export const useKoreroStore = defineStore('korero', () => {
     })
 
     if (!currentConversation.value) {
-      currentConversation.value = await state.value.conversationCollection.getOne(id)
+      currentConversation.value =
+        (await state.value.conversationCollection.getOne(id)) ?? undefined
     }
+
+    if (!currentConversation.value) return
 
     setChannel(currentConversation.value.channelId)
 

@@ -9,7 +9,7 @@ const { hasCompletedOnboarding, orgs, user } = storeToRefs(koreroStore)
 
 function openOrgModal() {
   // @ts-expect-error Bazaar SDK type mismatch
-  bzr.orgs.openModal(null, async () => {
+  bzr.orgs.openPopup(null, async () => {
     await koreroStore.setOrgs()
   })
 }
