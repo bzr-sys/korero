@@ -1,2 +1,4 @@
 minimumReleaseAgeExclude:
   - vite@8.0.15
+  - '@bzr/bazaar-types@1.7.0'
+  - '@bzr/bazaar@1.7.0'
