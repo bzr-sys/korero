@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@bzr/bazaar':
-        specifier: 1.7.0
-        version: 1.7.0
+        specifier: 1.9.0
+        version: 1.9.0
       '@toast-ui/editor':
         specifier: 3.2.2
         version: 3.2.2
@@ -243,12 +243,12 @@ packages:
     resolution: {integrity: sha512-7R4mZocEt8nOIMCz9cQyxsrY7n/jhFW9YUW6Er9ySnBzH92wA0KmQUR1cT2encq2Lix6kRD2GyQRAmT1dWtwzg==}
     engines: {node: '>= 18'}
 
-  '@bzr/bazaar-types@1.7.0':
-    resolution: {integrity: sha512-aipsbLGVfnovWWoYbmI6MpdJGi5/z8K7NJbTGr5n1Py4aA2PpAF0bqaIDHfSIgJ+gy47UPfmp1Ib63mJdMWemg==}
+  '@bzr/bazaar-types@1.8.0':
+    resolution: {integrity: sha512-MPwJqDJ0dMmUtdFuHpvfW9PLkgaGgVtLGZO0DdtOzFuae+2UQ0Ei8SGT/bEUZGrXTRV8jSKYqm++pbPTSVQzSw==}
     engines: {node: '>=24.0.0'}
 
-  '@bzr/bazaar@1.7.0':
-    resolution: {integrity: sha512-aoyRiQuTzXCIVbYyICAsQv/RBMnSo5BdY4KwnMljbFQJaHdhYjvfYnsEFBg3Vu+mczCq3TyZRje+Zy09PIF4mA==}
+  '@bzr/bazaar@1.9.0':
+    resolution: {integrity: sha512-4SqxiQYX9KycTGmk4ueMMCOcObh6AbhyKNSdHITbC5BsuwjK5kTTP7ue3HSFEo7Xh4aKjp8pNaOuqdppkJFJUQ==}
     engines: {node: '>=24.0.0'}
 
   '@emnapi/core@1.10.0':
@@ -1986,12 +1986,12 @@ snapshots:
 
   '@badgateway/oauth2-client@3.3.1': {}
 
-  '@bzr/bazaar-types@1.7.0': {}
+  '@bzr/bazaar-types@1.8.0': {}
 
-  '@bzr/bazaar@1.7.0':
+  '@bzr/bazaar@1.9.0':
     dependencies:
       '@badgateway/oauth2-client': 3.3.1
-      '@bzr/bazaar-types': 1.7.0
+      '@bzr/bazaar-types': 1.8.0
       socket.io-client: 4.8.4
     transitivePeerDependencies:
       - bufferutil
