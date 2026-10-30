@@ -1,6 +1,5 @@
 minimumReleaseAgeExclude:
   - vite@8.0.15
-  - '@bzr/bazaar-types@1.7.0'
-  - '@bzr/bazaar@1.7.0'
-  - '@bzr/bazaar-types@1.8.0'
-  - '@bzr/bazaar@1.9.0'
+  # Our own packages; a version pin here isn't honored by `--frozen-lockfile` (pnpm 11.5)
+  - '@bzr/bazaar'
+  - '@bzr/bazaar-types'
