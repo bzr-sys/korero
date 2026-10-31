@@ -1,5 +1,8 @@
 name: Deploy to S3 and invalidate CloudFront cache
 on:
+  # Merges to main go to staging
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       environment:
@@ -13,8 +16,9 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    environment: ${{ inputs.environment || 'staging' }}
     env:
+      TARGET: ${{ inputs.environment || 'staging' }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
@@ -27,20 +31,20 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build for production
-        if: github.event.inputs.environment == 'prod'
+        if: env.TARGET == 'prod'
         env:
           VITE_APP_ID: ${{ secrets.VITE_APP_ID }}
         run: pnpm run build
 
       - name: Build for staging
-        if: github.event.inputs.environment == 'staging'
+        if: env.TARGET == 'staging'
         env:
           VITE_APP_ID: ${{ secrets.STAGING_VITE_APP_ID }}
           VITE_BAZAAR_URI: ${{ secrets.STAGING_VITE_BAZAAR_URI }}
         run: pnpm run build
 
       - name: Deploy to S3 and invalidate CloudFront - Production
-        if: github.event.inputs.environment == 'prod'
+        if: env.TARGET == 'prod'
         uses: reggionick/s3-deploy@v4
         with:
           folder: dist
@@ -54,7 +58,7 @@ jobs:
           files-to-include: '{.*/**,**}'
 
       - name: Deploy to S3 and invalidate CloudFront - Staging
-        if: github.event.inputs.environment == 'staging'
+        if: env.TARGET == 'staging'
         uses: reggionick/s3-deploy@v4
         with:
           folder: dist
