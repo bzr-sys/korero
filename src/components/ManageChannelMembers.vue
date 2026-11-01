@@ -12,7 +12,6 @@ const emit = defineEmits(['update:addMember', 'update:removeMember'])
 const koreroStore = useKoreroStore()
 
 function openOrgModal() {
-  // @ts-expect-error Bazaar SDK type mismatch
   bzr.orgs.openPopup()
 }
 
