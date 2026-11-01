@@ -91,7 +91,8 @@ async function createConversation() {
           return
         }
         const startTs = new Date(meetingDate.value)
-        const endTs = new Date(startTs).setHours(startTs.getHours() + 1)
+        const endTs = new Date(startTs)
+        endTs.setHours(startTs.getHours() + 1)
         try {
           // @ts-expect-error Bazaar SDK type mismatch
           await bzr.email.sendCalendarInvite({
