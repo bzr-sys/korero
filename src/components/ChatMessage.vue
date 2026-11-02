@@ -18,7 +18,11 @@ const koreroStore = useKoreroStore()
       <FormatDateString :dateString="message.created" :defaultCss="false" />
     </div>
 
-    <EditViewer :initialValue="message.text" :editValue="koreroStore.editMessage(message.id)" />
+    <EditViewer
+      :initialValue="message.text"
+      :editValue="koreroStore.editMessage(message.id)"
+      :canEdit="koreroStore.user.id === message.authorId"
+    />
   </div>
 </template>
 
