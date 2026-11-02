@@ -12,7 +12,8 @@ import {
   GranteeType,
   PermissionType,
   noSharingNotification,
-  BazaarContext
+  BazaarContext,
+  type Permission
 } from '@bzr/bazaar'
 import type { Channel, Config, Conversation, Message, Workspace } from '@/types'
 import { dateStrToISO } from '@/date'
@@ -33,6 +34,56 @@ const emptyGroup: PermissionGroup = {
   id: '',
   label: '',
   members: []
+}
+
+// The group reads messages, only its author changes one
+async function grantMessagePermissions(bzrCtx: BazaarContext, teamId: string) {
+  await bzrCtx.permissions.create(
+    {
+      collectionName: MESSAGE_COLLECTION,
+      granteeType: GranteeType.ORG,
+      granteeId: teamId,
+      types: [PermissionType.READ],
+      filter: { group: { $in: '$groups' } }
+    },
+    noSharingNotification
+  )
+  await bzrCtx.permissions.create(
+    {
+      collectionName: MESSAGE_COLLECTION,
+      granteeType: GranteeType.ORG,
+      granteeId: teamId,
+      types: [PermissionType.INSERT, PermissionType.UPDATE, PermissionType.DELETE],
+      filter: { group: { $in: '$groups' }, authorId: '$user' }
+    },
+    noSharingNotification
+  )
+}
+
+// Older teams have one grant letting the group change anyone's messages. Grants
+// add up, so it has to go. The new ones come first: nobody loses access meanwhile.
+async function tightenMessagePermissions(bzrCtx: BazaarContext, teamId: string) {
+  try {
+    const grants = await bzrCtx.permissions.list({
+      collectionName: MESSAGE_COLLECTION,
+      granteeType: GranteeType.ORG,
+      granteeId: teamId
+    })
+    const isAuthorOnly = (grant: Permission) => grant.filter?.authorId === '$user'
+    const old = grants.filter(
+      (grant) => grant.types.includes(PermissionType.UPDATE) && !isAuthorOnly(grant)
+    )
+    if (old.length === 0) {
+      return
+    }
+    if (!grants.some(isAuthorOnly)) {
+      await grantMessagePermissions(bzrCtx, teamId)
+    }
+    await Promise.all(old.map((grant) => bzrCtx.permissions.delete(grant.id)))
+  } catch (e: unknown) {
+    // Tried again on the next sign-in
+    console.error('Could not tighten message permissions', e)
+  }
 }
 
 export const useKoreroStore = defineStore('korero', () => {
@@ -193,26 +244,12 @@ export const useKoreroStore = defineStore('korero', () => {
       }),
       messageCollection: bzrCtx.collection<Message>(MESSAGE_COLLECTION, {
         onCreate: async () => {
-          // create permissions for group
-          bzrCtx.permissions.create(
-            {
-              collectionName: MESSAGE_COLLECTION,
-              granteeType: GranteeType.ORG,
-              granteeId: config.currentTeam,
-              types: [
-                PermissionType.INSERT,
-                PermissionType.UPDATE,
-                PermissionType.DELETE,
-                PermissionType.READ
-              ],
-              filter: { group: { $in: '$groups' } }
-            },
-            noSharingNotification
-          )
+          await grantMessagePermissions(bzrCtx, config.currentTeam)
           // TODO create permission to create backlinks
         }
       })
     }
+    await tightenMessagePermissions(bzrCtx, config.currentTeam)
     // Reset
     channels.value = []
     conversations.value = []
