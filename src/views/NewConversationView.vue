@@ -83,35 +83,6 @@ async function createConversation() {
       }
       c = meeting
 
-      // Send email invitations
-      if (sendInvitation.value) {
-        const group = koreroStore.getGroup(koreroStore.currentChannel.group)
-        if (!group.id) {
-          console.log('Error: no channel members')
-          return
-        }
-        const startTs = new Date(meetingDate.value)
-        const endTs = new Date(startTs).setHours(startTs.getHours() + 1)
-        try {
-          // @ts-expect-error Bazaar SDK type mismatch
-          await bzr.email.sendCalendarInvite({
-            userIds: group.members,
-            eventName: c.title,
-            message:
-              c.message ||
-              (agenda.setting === Agency.OWNER
-                ? agenda.text
-                : 'Agenda will be determined collaboratively.'),
-            startTs: startTs,
-            endTs: endTs // TODO requires user set end time
-          })
-        } catch (err) {
-          if (isNoPermissionError(err)) {
-            notEmailSender.value = true
-            return
-          }
-        }
-      }
       break
     }
     case ConversationType.POLL: {
@@ -144,7 +115,47 @@ async function createConversation() {
   }
   const conversationId = await koreroStore.createConversation(c)
   await koreroStore.syncConversations()
+  if (c.type === ConversationType.MEETING && sendInvitation.value) {
+    inviteError.value = await sendInvites(c as Omit<Meeting, 'id'>)
+    if (inviteError.value) {
+      // Stays here to say so; the meeting exists
+      createdId.value = conversationId
+      return
+    }
+  }
   router.push({ name: 'conversation', params: { conversationId } })
+}
+
+// Why the invites weren't sent, empty if they were
+async function sendInvites(meeting: Omit<Meeting, 'id'>): Promise<string> {
+  const group = await koreroStore.loadGroup(meeting.group)
+  if (!group) {
+    return "Invitations weren't sent: the channel members couldn't be loaded."
+  }
+  const startTs = new Date(meetingDate.value)
+  const endTs = new Date(startTs)
+  endTs.setHours(startTs.getHours() + 1)
+  try {
+    // @ts-expect-error Bazaar SDK type mismatch
+    await bzr.email.sendCalendarInvite({
+      userIds: group.members,
+      eventName: meeting.title,
+      message:
+        meeting.message ||
+        (meeting.agenda.setting === Agency.OWNER
+          ? meeting.agenda.text || 'No agenda yet.'
+          : 'Agenda will be determined collaboratively.'),
+      startTs: startTs,
+      endTs: endTs // TODO requires user set end time
+    })
+    return ''
+  } catch (err) {
+    if (isNoPermissionError(err)) {
+      return "Invitations weren't sent: sending email needs a paid Bazaar plan or a seat on a paid organization."
+    }
+    console.error('Could not send invitations', err)
+    return "Invitations couldn't be sent."
+  }
 }
 
 function addAgendaItem() {
@@ -193,7 +204,8 @@ const agendaItems = ref([{ ...emptyAgendaItem }])
 const due = ref('')
 const meetingDate = ref('')
 const messageValidationError = ref('')
-const notEmailSender = ref(false)
+const inviteError = ref('')
+const createdId = ref<string>()
 const sendInvitation = ref(true)
 </script>
 
@@ -214,7 +226,17 @@ const sendInvitation = ref(true)
         </div>
       </div>
 
-      <form @submit.prevent="createConversation">
+      <div v-if="createdId" role="status">
+        <p class="font-bold">Meeting created</p>
+        <p class="mb-4">{{ inviteError }}</p>
+        <RouterLink
+          :to="{ name: 'conversation', params: { conversationId: createdId } }"
+          class="btn btn-accent"
+          >Open meeting</RouterLink
+        >
+      </div>
+
+      <form v-else @submit.prevent="createConversation">
         <input type="hidden" v-model="chosenType" />
 
         <TextInput label="Title" v-model="title" />
@@ -331,12 +353,6 @@ const sendInvitation = ref(true)
               <input type="checkbox" v-model="sendInvitation" id="send_invites" />
               <label for="send_invites" class="pl-2">Send invitations per email</label>
             </fieldset>
-            <div v-if="notEmailSender">
-              <p class="text-sm text-red-400">
-                You are not verified to send email. We sent you an email with a confirmation link.
-                Please confirm your email and try again.
-              </p>
-            </div>
           </div>
 
           <!-- POLL -->
