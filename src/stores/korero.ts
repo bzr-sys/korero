@@ -12,7 +12,9 @@ import {
   GranteeType,
   PermissionType,
   noSharingNotification,
-  BazaarContext
+  isNoPermissionError,
+  BazaarContext,
+  type Permission
 } from '@bzr/bazaar'
 import type { Channel, Config, Conversation, Message, Workspace } from '@/types'
 import { dateStrToISO } from '@/date'
@@ -35,6 +37,84 @@ const emptyGroup: PermissionGroup = {
   members: []
 }
 
+// The group reads messages, only its author changes one
+async function grantMessagePermissions(bzrCtx: BazaarContext, teamId: string) {
+  await bzrCtx.permissions.create(
+    {
+      collectionName: MESSAGE_COLLECTION,
+      granteeType: GranteeType.ORG,
+      granteeId: teamId,
+      types: [PermissionType.READ],
+      filter: { group: { $in: '$groups' } }
+    },
+    noSharingNotification
+  )
+  await bzrCtx.permissions.create(
+    {
+      collectionName: MESSAGE_COLLECTION,
+      granteeType: GranteeType.ORG,
+      granteeId: teamId,
+      types: [PermissionType.INSERT, PermissionType.UPDATE, PermissionType.DELETE],
+      filter: { group: { $in: '$groups' }, authorId: '$user' }
+    },
+    noSharingNotification
+  )
+}
+
+// Older teams have one grant letting the group change anyone's messages. Grants
+// add up, so it has to go. The new ones come first: nobody loses access meanwhile.
+async function tightenMessagePermissions(bzrCtx: BazaarContext, teamId: string) {
+  try {
+    const grants = await bzrCtx.permissions.list({
+      collectionName: MESSAGE_COLLECTION,
+      granteeType: GranteeType.ORG,
+      granteeId: teamId
+    })
+    const isAuthorOnly = (grant: Permission) => grant.filter?.authorId === '$user'
+    const old = grants.filter(
+      (grant) => grant.types.includes(PermissionType.UPDATE) && !isAuthorOnly(grant)
+    )
+    if (old.length === 0) {
+      return
+    }
+    if (!grants.some(isAuthorOnly)) {
+      await grantMessagePermissions(bzrCtx, teamId)
+    }
+    await Promise.all(old.map((grant) => bzrCtx.permissions.delete(grant.id)))
+  } catch (e: unknown) {
+    // Tried again on the next sign-in
+    console.error('Could not tighten message permissions', e)
+  }
+}
+
+// Only admins create collections. One signing in sets up all of them, so members
+// never run into a missing one. False: a member has to wait for that.
+async function setUpCollections(
+  bzrCtx: BazaarContext,
+  collections: [
+    string,
+    CollectionAPI<Channel> | CollectionAPI<Conversation> | CollectionAPI<Message>
+  ][]
+): Promise<boolean> {
+  try {
+    const existing = await bzrCtx.collections.list()
+    for (const [name, collection] of collections) {
+      if (!existing.includes(name)) {
+        // Using a missing collection creates it and runs its onCreate
+        await collection.getAll({}, { endOffset: 1 })
+      }
+    }
+    return true
+  } catch (e: unknown) {
+    if (isNoPermissionError(e)) {
+      return false
+    }
+    // Anything else shows up where the collection gets used
+    console.error('Could not set up collections', e)
+    return true
+  }
+}
+
 export const useKoreroStore = defineStore('korero', () => {
   const loaded = ref(false)
   const authenticated = ref(false)
@@ -51,6 +131,9 @@ export const useKoreroStore = defineStore('korero', () => {
   > = ref(undefined)
 
   const hasCompletedOnboarding = computed(() => !!state.value)
+
+  // The workspace has collections missing, and this user can't create them
+  const awaitingSetup = ref(false)
 
   const isSideBarExpanded = ref(false)
 
@@ -147,13 +230,11 @@ export const useKoreroStore = defineStore('korero', () => {
   async function setState(config: Config) {
     const bzrCtx = await bzr.createContext({ ownerId: config.currentTeam })
     const previous = state.value?.bzr
-    state.value = {
-      config: config,
-      bzr: bzrCtx,
+    const collections = {
       channelCollection: bzrCtx.collection<Channel>(CHANNEL_COLLECTION, {
         onCreate: async () => {
           // create permissions for group
-          bzrCtx.permissions.create(
+          await bzrCtx.permissions.create(
             {
               collectionName: CHANNEL_COLLECTION,
               granteeType: GranteeType.ORG,
@@ -173,7 +254,7 @@ export const useKoreroStore = defineStore('korero', () => {
       conversationCollection: bzrCtx.collection<Conversation>(CONVERSATION_COLLECTION, {
         onCreate: async () => {
           // create permissions for group
-          bzrCtx.permissions.create(
+          await bzrCtx.permissions.create(
             {
               collectionName: CONVERSATION_COLLECTION,
               granteeType: GranteeType.ORG,
@@ -192,25 +273,20 @@ export const useKoreroStore = defineStore('korero', () => {
       }),
       messageCollection: bzrCtx.collection<Message>(MESSAGE_COLLECTION, {
         onCreate: async () => {
-          // create permissions for group
-          bzrCtx.permissions.create(
-            {
-              collectionName: MESSAGE_COLLECTION,
-              granteeType: GranteeType.ORG,
-              granteeId: config.currentTeam,
-              types: [
-                PermissionType.INSERT,
-                PermissionType.UPDATE,
-                PermissionType.DELETE,
-                PermissionType.READ
-              ],
-              filter: { group: { $in: '$groups' } }
-            },
-            noSharingNotification
-          )
+          await grantMessagePermissions(bzrCtx, config.currentTeam)
           // TODO create permission to create backlinks
         }
       })
+    }
+    // Before state: the views use the collections as soon as it's there
+    awaitingSetup.value = !(await setUpCollections(bzrCtx, [
+      [CHANNEL_COLLECTION, collections.channelCollection],
+      [CONVERSATION_COLLECTION, collections.conversationCollection],
+      [MESSAGE_COLLECTION, collections.messageCollection]
+    ]))
+    state.value = { config: config, bzr: bzrCtx, ...collections }
+    if (!awaitingSetup.value) {
+      await tightenMessagePermissions(bzrCtx, config.currentTeam)
     }
     void previous?.close()
     // Reset
@@ -241,6 +317,15 @@ export const useKoreroStore = defineStore('korero', () => {
     await setState(config)
   }
 
+  async function checkSetup() {
+    if (!state.value) {
+      return
+    }
+    await setState(state.value.config)
+    syncChannels()
+    syncConversations()
+  }
+
   //
   // Load and manage channels in a team
   //
@@ -248,7 +333,7 @@ export const useKoreroStore = defineStore('korero', () => {
   const channels: Ref<Channel[]> = ref([])
 
   async function syncChannels() {
-    if (!state.value) {
+    if (!state.value || awaitingSetup.value) {
       return
     }
     channels.value = await state.value.channelCollection.getAll()
@@ -285,7 +370,7 @@ export const useKoreroStore = defineStore('korero', () => {
   let unsubscribeConversations: (() => Promise<string>) | undefined = undefined
 
   async function syncConversations() {
-    if (!state.value) {
+    if (!state.value || awaitingSetup.value) {
       return
     }
 
@@ -397,8 +482,7 @@ export const useKoreroStore = defineStore('korero', () => {
     })
 
     if (!currentConversation.value) {
-      currentConversation.value =
-        (await state.value.conversationCollection.getOne(id)) ?? undefined
+      currentConversation.value = (await state.value.conversationCollection.getOne(id)) ?? undefined
     }
 
     if (!currentConversation.value) return
@@ -538,6 +622,8 @@ export const useKoreroStore = defineStore('korero', () => {
     syncChannels,
     channels,
     setTeam,
+    awaitingSetup,
+    checkSetup,
     createChannel,
 
     // Channel view

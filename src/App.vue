@@ -5,6 +5,7 @@ import NavBar from './components/NavBar.vue'
 import BaseLogin from './components/BaseLogin.vue'
 import SideBar from './components/SideBar.vue'
 import BaseOnboarding from './components/BaseOnboarding.vue'
+import SetupPending from './components/SetupPending.vue'
 import LoaderSVG from './components/LoaderSVG.vue'
 
 const koreroStore = useKoreroStore()
@@ -30,7 +31,8 @@ bzr.onLogin(async () => {
       <template v-if="!koreroStore.hasCompletedOnboarding">
         <BaseOnboarding />
       </template>
-      <template v-if="koreroStore.state">
+      <SetupPending v-if="koreroStore.state && koreroStore.awaitingSetup" />
+      <template v-else-if="koreroStore.state">
         <div class="flex flex-1">
           <SideBar />
           <!-- height = 100vh - navbar header height -->
