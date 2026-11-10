@@ -567,6 +567,12 @@ export const useKoreroStore = defineStore('korero', () => {
     }
   }
 
+  // Like getGroup, but waits for it to load
+  async function loadGroup(groupId: string): Promise<PermissionGroup | undefined> {
+    await cacheGroup(groupId)
+    return groups.value[groupId]
+  }
+
   async function addGroupMember(groupId: string, memberId: string) {
     if (!state.value) {
       return
@@ -603,6 +609,7 @@ export const useKoreroStore = defineStore('korero', () => {
     currentWorkspace,
     users,
     getGroup,
+    loadGroup,
     addGroupMember,
     removeGroupMember,
     groups,
