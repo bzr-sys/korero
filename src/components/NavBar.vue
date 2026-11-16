@@ -11,6 +11,7 @@ import SignOutSVG from './SignOutSVG.vue'
 import SettingsSVG from './SettingsSVG.vue'
 import WorkspaceAvatar from './WorkspaceAvatar.vue'
 import HamburgerSVG from './HamburgerSVG.vue'
+import OrgSwitchItems from './OrgSwitchItems.vue'
 
 const koreroStore = useKoreroStore()
 
@@ -129,6 +130,7 @@ onUnmounted(() => {
                 ><SettingsSVG width="18px" /> <span>Settings</span></RouterLink
               >
             </li>
+            <OrgSwitchItems />
             <li>
               <button
                 @click="logOut"

@@ -6,6 +6,7 @@ import BaseLogin from './components/BaseLogin.vue'
 import SideBar from './components/SideBar.vue'
 import BaseOnboarding from './components/BaseOnboarding.vue'
 import SetupPending from './components/SetupPending.vue'
+import OrgPlanRequired from './components/OrgPlanRequired.vue'
 import LoaderSVG from './components/LoaderSVG.vue'
 
 const koreroStore = useKoreroStore()
@@ -14,8 +15,6 @@ koreroStore.autoSignIn()
 bzr.onLogin(async () => {
   koreroStore.autoSignIn()
 })
-
-// maybe redirect home if not onboarded
 </script>
 
 <template>
@@ -28,11 +27,10 @@ bzr.onLogin(async () => {
       class="flex flex-col overflow-hidden fixed top-0 right-0 bottom-0 left-0 min-h-[600px]"
     >
       <NavBar />
-      <template v-if="!koreroStore.hasCompletedOnboarding">
-        <BaseOnboarding />
-      </template>
-      <SetupPending v-if="koreroStore.state && koreroStore.awaitingSetup" />
-      <template v-else-if="koreroStore.state">
+      <BaseOnboarding v-if="koreroStore.gate === 'choose'" />
+      <OrgPlanRequired v-else-if="koreroStore.gate === 'plan'" />
+      <SetupPending v-else-if="koreroStore.gate === 'setup'" />
+      <template v-else-if="koreroStore.gate === 'ready'">
         <div class="flex flex-1">
           <SideBar />
           <!-- height = 100vh - navbar header height -->
@@ -43,6 +41,9 @@ bzr.onLogin(async () => {
           </main>
         </div>
       </template>
+      <div v-else class="grid flex-1 place-items-center">
+        <LoaderSVG width="40px" />
+      </div>
     </div>
     <template v-else>
       <BaseLogin />
