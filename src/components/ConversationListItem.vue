@@ -13,16 +13,18 @@ const koreroStore = useKoreroStore()
 </script>
 
 <template>
-  <li class="flex gap-4 items-center">
-    <ConversationTypeIcon :type="conversation.type" class="flex-shrink-0" :width="iconWidth" />
-    <div>
-      <h2 class="card-title">
+  <li class="flex gap-3 sm:gap-4 items-center">
+    <span class="grid place-items-center p-2.5 rounded-full bg-mint-soft shrink-0">
+      <ConversationTypeIcon :type="conversation.type" :width="iconWidth" />
+    </span>
+    <div class="min-w-0">
+      <h2 class="font-semibold text-base sm:text-lg leading-snug hover:text-accent">
         <!-- could make this not a link when on the conversation view -->
         <RouterLink :to="{ name: 'conversation', params: { conversationId: conversation.id } }">{{
           conversation.title
         }}</RouterLink>
       </h2>
-      <div class="italic text-xs">
+      <div class="text-xs opacity-70 mt-0.5">
         By {{ koreroStore.getUser(conversation.authorId).name }} on
         <FormatDateString :dateString="conversation.created" :defaultCss="false" /> in
         <RouterLink

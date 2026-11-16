@@ -82,19 +82,22 @@ function toggleMembersDropdown(): void {
 <template>
   <div class="grid gap-6 lg:grid-cols-3 max-w-screen-2xl">
     <div class="lg:col-span-2">
-      <div class="flex gap-4 justify-between items-center pb-2">
+      <p v-if="currentChannel" class="text-sm font-medium text-accent">
+        # {{ currentChannel.name }}
+      </p>
+      <div class="flex gap-4 justify-between items-center pb-3">
         <HeadingOne class="capitalize"
           >{{ conversationTypeParam ? conversationTypeParam : 'Conversation' }}s</HeadingOne
         >
 
         <RouterLink
-          class="btn btn-xs"
+          class="btn btn-sm btn-accent"
           :to="{ name: 'newConversationChoose', params: { channelId } }"
           >New conversation</RouterLink
         >
       </div>
 
-      <div class="py-4 px-6 rounded border border-slate-200">
+      <div class="p-4 sm:p-6 rounded-box border border-base-300 bg-base-100">
         <p v-if="koreroStore.conversations.length === 0" class="text-center py-12">
           Be the first to create a conversation.
         </p>
@@ -120,7 +123,7 @@ function toggleMembersDropdown(): void {
       <div class="flex gap-4 justify-between items-center pb-2">
         <HeadingTwo>Members</HeadingTwo>
         <button
-          class="btn btn-xs"
+          class="btn btn-sm btn-ghost"
           @click="toggleMembersDropdown"
           :aria-expanded="isMembersDropdownExpanded"
           aria-label="Manage channel members card"
@@ -131,7 +134,7 @@ function toggleMembersDropdown(): void {
         </button>
       </div>
 
-      <div class="px-6 py-4 rounded border border-slate-200">
+      <div class="p-4 sm:p-6 rounded-box border border-base-300 bg-base-100">
         <div v-if="isMembersDropdownExpanded" :aria-hidden="!isMembersDropdownExpanded">
           <ManageChannelMembers
             :initial-members="members.filter((id) => id !== user.id)"
@@ -139,18 +142,18 @@ function toggleMembersDropdown(): void {
             @update:remove-member="removeMember"
           ></ManageChannelMembers>
         </div>
-        <ul v-else class="text-sm">
+        <ul v-else class="text-sm flex flex-col gap-1.5">
           <li v-for="member in members" :key="member">{{ userName(member) }}</li>
         </ul>
       </div>
 
       <div class="pt-4">
         <HeadingTwo>Conversation types</HeadingTwo>
-        <ul class="menu bg-white border-slate-200 border rounded-box my-2">
+        <ul class="menu w-full bg-base-100 border-base-300 border rounded-box my-2">
           <li>
             <RouterLink
               :to="{ name: 'channel', params: { channelId } }"
-              :class="{ active: !conversationTypeParam }"
+              :class="{ 'menu-active': !conversationTypeParam }"
               >View all conversations</RouterLink
             >
           </li>
@@ -161,7 +164,7 @@ function toggleMembersDropdown(): void {
                 params: { channelId, conversationType: type }
               }"
               class="capitalize flex gap-2 items-center"
-              :class="{ active: type === conversationTypeParam }"
+              :class="{ 'menu-active': type === conversationTypeParam }"
             >
               <ConversationTypeIcon :type="type" />
               <span>{{ type }}s</span>

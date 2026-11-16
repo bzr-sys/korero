@@ -37,7 +37,7 @@ bzr.onLogin(async () => {
           <SideBar />
           <!-- height = 100vh - navbar header height -->
           <main class="flex-grow h-[calc(100vh-12*0.25rem)] overflow-hidden">
-            <div class="px-6 pt-4 pb-16 overflow-y-auto h-full">
+            <div class="px-4 sm:px-8 pt-6 pb-16 overflow-y-auto h-full">
               <RouterView />
             </div>
           </main>

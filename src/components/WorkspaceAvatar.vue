@@ -45,7 +45,7 @@ watch(
 <template>
   <div
     v-if="currentWorkspace?.type === 'org' || !gravatarExists"
-    :class="`bg-warning rounded-full inline-flex justify-center items-center ${size === 'small' && `w-7 h-7`} ${size === 'medium' && `w-12 h-12`}`"
+    :class="`bg-secondary text-secondary-content font-semibold rounded-full inline-flex justify-center items-center ${size === 'small' && `w-7 h-7`} ${size === 'medium' && `w-12 h-12`}`"
   >
     <span :class="`uppercase ${size === 'small' && `text-xs`} ${size === 'medium' && `text-xl`}`">{{
       currentWorkspace?.handle[0]

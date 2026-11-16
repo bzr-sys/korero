@@ -211,7 +211,7 @@ const sendInvitation = ref(true)
 
 <template>
   <SmallContainer>
-    <div class="mt-12 py-4 px-6 rounded border border-slate-200">
+    <div class="sm:mt-6 p-4 sm:p-6 rounded-box border border-base-300 bg-base-100">
       <div class="flex gap-4 items-center pb-6">
         <ConversationTypeIcon :type="conversationType" class="flex-shrink-0" width="36px" />
         <div>
