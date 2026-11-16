@@ -12,7 +12,7 @@ const checking = ref(false)
 
 async function checkAgain() {
   checking.value = true
-  await koreroStore.checkSetup()
+  await koreroStore.refresh()
   checking.value = false
 }
 </script>

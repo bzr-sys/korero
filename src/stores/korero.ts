@@ -18,6 +18,7 @@ import {
 } from '@bzr/bazaar'
 import type { Channel, Config, Conversation, Message, Workspace } from '@/types'
 import { dateStrToISO } from '@/date'
+import router from '@/router'
 
 const CONFIG_COLLECTION = 'configs'
 const CHANNEL_COLLECTION = 'channels'
@@ -130,7 +131,8 @@ export const useKoreroStore = defineStore('korero', () => {
     | undefined
   > = ref(undefined)
 
-  const hasCompletedOnboarding = computed(() => !!state.value)
+  // Which org this user last opened, in their own DB
+  const config: Ref<Config | undefined> = ref(undefined)
 
   // The workspace has collections missing, and this user can't create them
   const awaitingSetup = ref(false)
@@ -147,14 +149,34 @@ export const useKoreroStore = defineStore('korero', () => {
   const groups: Ref<{ [key: string]: PermissionGroup }> = ref({})
 
   async function setOrgs() {
-    orgs.value = await bzr.orgs.list()
+    // Bazaar returns them in no particular order
+    orgs.value = (await bzr.orgs.list()).sort((a, b) => a.name.localeCompare(b.name))
   }
-
-  const activeOrgs = computed(() => orgs.value.filter((o) => o.active))
 
   function getOrg(id: string): Org | undefined {
     return orgs.value.find((o) => o.id === id)
   }
+
+  // Undefined: none chosen yet, or the user left it
+  const currentOrg = computed(() => (config.value ? getOrg(config.value.currentTeam) : undefined))
+
+  // Only org owners can subscribe
+  function isOrgAdmin(org: Org): boolean {
+    return org.admins.includes(user.value.id)
+  }
+
+  // What a signed-in user sees. Korero only runs in an org on an org plan.
+  const gate = computed<'choose' | 'plan' | 'setup' | 'loading' | 'ready'>(() => {
+    if (!currentOrg.value) return 'choose'
+    // Orgs can only buy org plans, so active = on an org plan
+    if (!currentOrg.value.active) return 'plan'
+    if (awaitingSetup.value) return 'setup'
+    if (!state.value) return 'loading'
+    return 'ready'
+  })
+
+  // The org used last is gone: personal (no longer offered) or left
+  const lostOrg = computed(() => !!config.value && !currentOrg.value)
 
   function getUser(id: string): User {
     const user = users.value[id]
@@ -166,25 +188,9 @@ export const useKoreroStore = defineStore('korero', () => {
   }
 
   const currentWorkspace = computed<Workspace | null>(() => {
-    if (!state.value) return null
-    // Active workspace is personal user
-    if (state.value.config.currentTeam === user.value.id) {
-      return {
-        id: user.value.id,
-        name: 'Personal',
-        handle: user.value.handle,
-        type: 'user'
-      }
-    }
-    // Active workspace is an org
-    const activeOrg = getOrg(state.value.config.currentTeam)
-    if (!activeOrg) return null
-    return {
-      id: activeOrg.id,
-      name: activeOrg.name,
-      handle: activeOrg.handle,
-      type: 'org'
-    }
+    const org = currentOrg.value
+    if (!state.value || !org) return null
+    return { id: org.id, name: org.name, handle: org.handle, type: 'org' }
   })
 
   function getGroup(id: string): PermissionGroup {
@@ -201,21 +207,12 @@ export const useKoreroStore = defineStore('korero', () => {
   async function autoSignIn() {
     if (bzr.isLoggedIn()) {
       try {
-        // TODO get all entities that can have channels (user, org, teams?)
         user.value = await bzr.social.getUser()
-
-        // Get config
-        const c = await configCollection.getAll()
-        if (c.length) {
-          await setState(c[0])
-
-          // Get channels
-          syncChannels()
-          syncConversations()
+        await setOrgs()
+        config.value = (await configCollection.getAll())[0]
+        if (!(await chooseOnlyOrg())) {
+          await openOrg()
         }
-
-        // Get orgs
-        orgs.value = await bzr.orgs.list()
 
         authenticated.value = true
         loaded.value = true
@@ -227,9 +224,71 @@ export const useKoreroStore = defineStore('korero', () => {
     }
   }
 
-  async function setState(config: Config) {
-    const bzrCtx = await bzr.createContext({ ownerId: config.currentTeam })
-    const previous = state.value?.bzr
+  // Bazaar has no event for joining, leaving or subscribing: check on return
+  window.addEventListener('focus', () => {
+    if (authenticated.value) void refresh()
+  })
+
+  // One at a time: closing a popup also focuses the window
+  let refreshing: Promise<void> | undefined
+  function refresh(): Promise<void> {
+    refreshing ??= reloadOrgs().finally(() => (refreshing = undefined))
+    return refreshing
+  }
+
+  // Reopens the current org if it changed (plan, membership) or waits for setup
+  async function reloadOrgs() {
+    const key = () => `${currentOrg.value?.id}:${currentOrg.value?.active}`
+    const before = key()
+    await setOrgs()
+    if (await chooseOnlyOrg()) {
+      return
+    }
+    if (key() !== before || awaitingSetup.value) {
+      await openOrg()
+    }
+  }
+
+  // Nothing to choose from: no org open yet and exactly one to open
+  async function chooseOnlyOrg(): Promise<boolean> {
+    if (currentOrg.value || orgs.value.length !== 1) {
+      return false
+    }
+    await chooseOrg(orgs.value[0]!.id)
+    return true
+  }
+
+  // Opens the current org, if it is on a plan. Clears everything from the one before.
+  let opening = 0
+  async function openOrg() {
+    const mine = ++opening
+    void state.value?.bzr.close()
+    state.value = undefined
+    awaitingSetup.value = false
+    channels.value = []
+    conversations.value = []
+    messages.value = []
+    currentChannel.value = undefined
+    currentConversation.value = undefined
+    groups.value = {}
+
+    if (!config.value || !currentOrg.value?.active) {
+      return
+    }
+    const bzrCtx = await bzr.createContext({ ownerId: config.value.currentTeam })
+    const opened = await setState(config.value, bzrCtx)
+    // Switched again meanwhile
+    if (mine !== opening) {
+      void bzrCtx.close()
+      return
+    }
+    awaitingSetup.value = !opened.ready
+    state.value = opened.state
+    syncChannels()
+    syncConversations()
+  }
+
+  async function setState(config: Config, bzrCtx: BazaarContext) {
     const collections = {
       channelCollection: bzrCtx.collection<Channel>(CHANNEL_COLLECTION, {
         onCreate: async () => {
@@ -278,52 +337,32 @@ export const useKoreroStore = defineStore('korero', () => {
         }
       })
     }
-    // Before state: the views use the collections as soon as it's there
-    awaitingSetup.value = !(await setUpCollections(bzrCtx, [
+    const ready = await setUpCollections(bzrCtx, [
       [CHANNEL_COLLECTION, collections.channelCollection],
       [CONVERSATION_COLLECTION, collections.conversationCollection],
       [MESSAGE_COLLECTION, collections.messageCollection]
-    ]))
-    state.value = { config: config, bzr: bzrCtx, ...collections }
-    if (!awaitingSetup.value) {
+    ])
+    if (ready) {
       await tightenMessagePermissions(bzrCtx, config.currentTeam)
     }
-    void previous?.close()
-    // Reset
-    channels.value = []
-    conversations.value = []
-    messages.value = []
-    currentChannel.value = undefined
-    currentConversation.value = undefined
-    groups.value = {}
+    return { ready, state: { config, bzr: bzrCtx, ...collections } }
   }
 
-  async function setTeam(teamId: string) {
-    let config
-    if (state.value) {
-      if (!state.value.config.teams.includes(teamId)) {
-        state.value.config.teams.push(teamId)
-      }
-      state.value.config.currentTeam = teamId
-      await configCollection.updateOne(state.value.config.id, state.value.config)
-      config = state.value.config
+  // Remembers the org and opens it. Its own data starts at Home.
+  async function chooseOrg(orgId: string) {
+    if (config.value) {
+      const teams = config.value.teams.includes(orgId)
+        ? config.value.teams
+        : [...config.value.teams, orgId]
+      await configCollection.updateOne(config.value.id, { currentTeam: orgId, teams })
+      config.value = { ...config.value, currentTeam: orgId, teams }
     } else {
-      const newConfig = { currentTeam: teamId, teams: [teamId] }
-      const configId = await configCollection.insertOne(newConfig)
-      config = { id: configId, ...newConfig }
+      const newConfig = { currentTeam: orgId, teams: [orgId] }
+      const id = await configCollection.insertOne(newConfig)
+      config.value = { id, ...newConfig }
     }
-    await syncChannels()
-    await syncConversations()
-    await setState(config)
-  }
-
-  async function checkSetup() {
-    if (!state.value) {
-      return
-    }
-    await setState(state.value.config)
-    syncChannels()
-    syncConversations()
+    void router.push({ name: 'home' })
+    await openOrg()
   }
 
   //
@@ -614,13 +653,18 @@ export const useKoreroStore = defineStore('korero', () => {
     removeGroupMember,
     groups,
     state,
-    hasCompletedOnboarding,
     isSideBarExpanded,
     toggleSideBarExpanded,
     orgs,
-    activeOrgs,
     setOrgs,
     getOrg,
+    config,
+    currentOrg,
+    isOrgAdmin,
+    gate,
+    lostOrg,
+    chooseOrg,
+    refresh,
     loaded,
     authenticated,
     autoSignIn,
@@ -628,9 +672,6 @@ export const useKoreroStore = defineStore('korero', () => {
     // Org view
     syncChannels,
     channels,
-    setTeam,
-    awaitingSetup,
-    checkSetup,
     createChannel,
 
     // Channel view

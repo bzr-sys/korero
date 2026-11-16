@@ -3,83 +3,42 @@ import { useKoreroStore } from '@/stores/korero'
 import { storeToRefs } from 'pinia'
 import { bzr } from '@/bazaar'
 import HeadingTwo from './HeadingTwo.vue'
-import SwitchSVG from './SwitchSVG.vue'
 import BazaarLogoIcon from './BazaarLogoIcon.vue'
 
 const koreroStore = useKoreroStore()
+const { orgs, currentOrg } = storeToRefs(koreroStore)
 
-const { orgs, user, currentWorkspace } = storeToRefs(koreroStore)
-
+// Creating, joining and subscribing happen in Bazaar
 function openOrgModal() {
-  bzr.orgs.openPopup(null, async () => {
-    await koreroStore.setOrgs()
-  })
+  bzr.orgs.openPopup(null, () => koreroStore.refresh())
 }
 </script>
 
 <template>
-  <HeadingTwo class="pb-4">Workspaces</HeadingTwo>
-
-  <!-- grid 2x2 -->
-  <div class="grid gap-y-4 sm:grid-cols-[minmax(150px,1fr)_4fr] mb-12 [&>div]:py-2 sm:[&>div]:p-2">
-    <div class="sm:text-right sm:border-r sm:border-slate-200">
-      <h3 class="text-sm opacity-70">Personal</h3>
-    </div>
-    <div>
-      <div
-        v-if="currentWorkspace?.id === user.id"
-        class="text-xs opacity-70 text-success font-bold"
-      >
-        Current workspace
+  <HeadingTwo class="pb-4">Organizations</HeadingTwo>
+  <ul class="rounded border border-slate-200 divide-y divide-slate-200 mb-4">
+    <li v-for="org in orgs" :key="org.id" class="flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
+      <div class="min-w-0 flex-1">
+        <div class="font-bold truncate">{{ org.name }}</div>
+        <div class="opacity-70 text-sm truncate">@{{ org.handle }}</div>
+        <template v-if="!org.active">
+          <button
+            v-if="koreroStore.isOrgAdmin(org)"
+            class="link text-sm text-amber-700"
+            @click="openOrgModal"
+          >
+            No plan: subscribe in Bazaar
+          </button>
+          <div v-else class="text-sm text-amber-700">No plan: ask an owner to subscribe</div>
+        </template>
       </div>
-      <button
-        @click="koreroStore.setTeam(user.id)"
-        v-else
-        class="link link-hover text-xs flex gap-1 items-center"
-      >
-        <SwitchSVG width="12px" /> <span>Switch workspace</span>
+      <span v-if="org.id === currentOrg?.id" class="text-sm font-bold text-green-700">Current</span>
+      <button v-else class="btn btn-sm btn-accent" @click="koreroStore.chooseOrg(org.id)">
+        {{ currentOrg ? 'Switch' : 'Open' }}
       </button>
-      <div class="capitalize font-bold">{{ user.name }}</div>
-      <div class="opacity-70 text-sm">{{ user.email }}</div>
-      <div class="opacity-70 text-sm">@{{ user.handle }}</div>
-    </div>
-    <div class="sm:text-right sm:border-r sm:border-slate-200">
-      <h3 class="text-sm opacity-70">Organizations</h3>
-    </div>
-    <div class="flex flex-col gap-8">
-      <div>
-        <button @click="openOrgModal" class="btn btn-sm">
-          <BazaarLogoIcon width="12px" /> Manage organizations
-        </button>
-      </div>
-      <div v-for="org in orgs" :key="org.id">
-        <div
-          v-if="currentWorkspace?.id === org.id"
-          class="text-xs opacity-70 text-success font-bold"
-        >
-          Current workspace
-        </div>
-        <button
-          v-else
-          @click="koreroStore.setTeam(org.primaryTeam.id)"
-          class="link link-hover text-xs flex gap-1 items-center"
-        >
-          <SwitchSVG width="12px" /> <span>Switch workspace</span>
-        </button>
-        <!-- `active` is "subscription status is active", not "workspace exists". -->
-        <button
-          v-if="!org.active && org.admins?.includes(user.id)"
-          @click="openOrgModal()"
-          class="text-xs"
-        >
-          <span class="text-warning">&rarr;</span> Get Subscription
-        </button>
-        <span v-else-if="!org.active" class="text-xs opacity-70">No active subscription</span>
-        <div class="capitalize font-bold">{{ org.name }}</div>
-        <div class="opacity-70 text-sm">@{{ org.handle }}</div>
-      </div>
-    </div>
-  </div>
+    </li>
+  </ul>
+  <button @click="openOrgModal" class="btn btn-sm">
+    <BazaarLogoIcon width="12px" /> Manage organizations in Bazaar
+  </button>
 </template>
-
-<style scoped></style>
