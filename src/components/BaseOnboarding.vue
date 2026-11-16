@@ -1,97 +1,52 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
-import HeadingOne from './HeadingOne.vue'
 import { bzr } from '@/bazaar'
 import { storeToRefs } from 'pinia'
+import HeadingOne from './HeadingOne.vue'
+import SmallContainer from './SmallContainer.vue'
+import ManageWorkspaces from './ManageWorkspaces.vue'
+import BazaarLogoIcon from './BazaarLogoIcon.vue'
 
 const koreroStore = useKoreroStore()
-const { hasCompletedOnboarding, orgs, user } = storeToRefs(koreroStore)
+const { orgs, lostOrg, config, user } = storeToRefs(koreroStore)
 
+// Creating an org and accepting an invite happen in Bazaar
 function openOrgModal() {
-  bzr.orgs.openPopup(null, async () => {
-    await koreroStore.setOrgs()
-  })
-}
-
-function handleUsePersonal(): void {
-  koreroStore.setTeam(user.value.id)
-}
-
-function handleUseOrg(orgPrimaryTeamId: string): void {
-  koreroStore.setTeam(orgPrimaryTeamId)
+  bzr.orgs.openPopup(null, () => koreroStore.refresh())
 }
 </script>
 
 <template>
-  <div class="overflow-y-auto">
-    <div v-if="!hasCompletedOnboarding" class="py-12 px-4 max-w-[450px] mx-auto">
-      <div class="text-center">
-        <HeadingOne className="text-4xl">Welcome!</HeadingOne>
-        <div class="text-lg pb-8 opacity-70">Choose a workspace</div>
+  <div class="overflow-y-auto px-4 py-12">
+    <SmallContainer>
+      <div class="text-center pb-8">
+        <HeadingOne class="text-3xl">
+          {{ orgs.length ? 'Choose an organization' : 'Welcome to Korero' }}
+        </HeadingOne>
+        <p class="opacity-70 pt-2">
+          Korero runs in a Bazaar organization on a Team or Business plan.
+        </p>
+        <p v-if="lostOrg" role="status" class="mt-4 p-3 rounded bg-slate-100 text-sm">
+          {{
+            config?.currentTeam === user.id
+              ? 'Personal workspaces are gone. Pick an organization to continue.'
+              : 'You are no longer a member of the organization you used last.'
+          }}
+        </p>
       </div>
 
-      <div v-if="orgs.length < 1" class="text-center">
-        <button @click="openOrgModal" class="btn btn-accent">Create your first organization</button>
-      </div>
-      <div v-else>
-        <div class="flex justify-between gap-4 items-center pb-2">
-          <h2 class="text-left font-bold">My organizations</h2>
-          <button @click="openOrgModal" class="btn btn-xs">Create organization</button>
-        </div>
-        <div class="py-4 px-6 rounded border border-slate-200">
-          <ul class="grid grid-cols-1 sm:grid-cols-5 gap-3">
-            <li
-              v-for="org in orgs"
-              :key="org.id"
-              class="grid grid-flow-row max-sm:gap-3 sm:grid-flow-col sm:grid-cols-subgrid sm:col-span-5 items-center [&:not(:last-child)]:border-b border-slate-200 [&:not(:last-child)]:pb-4"
-            >
-              <div class="sm:col-span-3">
-                <div class="card-title">{{ org.name }}</div>
-                <div class="italic text-xs">@{{ org.handle }}</div>
-              </div>
-              <div class="sm:col-span-2">
-                <button
-                  @click="handleUseOrg(org.primaryTeam.id)"
-                  class="btn btn-sm btn-accent btn-block"
-                >
-                  Choose
-                </button>
-                <p v-if="!org.active" class="text-xs opacity-70 pt-1">No active subscription</p>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="pt-4">
-        <button @click="handleUsePersonal" class="btn btn-md btn-block btn-ghost">
-          Or, choose personal use
+      <div v-if="orgs.length === 0" class="p-6 rounded border border-slate-200 text-center">
+        <p class="font-bold">You're not in an organization yet</p>
+        <p class="pb-4">Create one for your team, or ask a teammate to invite you.</p>
+        <button @click="openOrgModal" class="btn btn-accent">
+          <BazaarLogoIcon width="16px" /> Create organization
         </button>
+        <p class="pt-4 text-sm opacity-70">
+          Invited?
+          <button @click="openOrgModal" class="link">Accept the invite in Bazaar</button>
+        </p>
       </div>
-    </div>
+      <ManageWorkspaces v-else />
+    </SmallContainer>
   </div>
 </template>
-
-<style scoped>
-/*
-  Enter and leave animations can use different
-  durations and timing functions.
-*/
-.slide-fade-enter-active {
-  transition: all 0.1s ease-out;
-}
-
-.slide-fade-leave-active {
-  transition: all 0.1s ease-out;
-}
-
-.slide-fade-enter-from {
-  transform: translateX(20px);
-  opacity: 0;
-}
-
-.slide-fade-leave-to {
-  transform: translateX(-20px);
-  opacity: 0;
-}
-</style>
