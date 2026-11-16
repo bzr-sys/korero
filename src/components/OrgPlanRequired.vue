@@ -30,8 +30,8 @@ async function checkAgain() {
 <template>
   <div v-if="currentOrg" class="overflow-y-auto px-4 py-12">
     <SmallContainer>
-      <div class="p-6 mb-12 rounded border border-slate-200 text-center">
-        <p class="font-bold">{{ currentOrg.name }} has no Korero plan</p>
+      <div class="p-6 mb-12 rounded-box border border-base-300 bg-base-100 text-center">
+        <p class="text-lg font-semibold mb-1">{{ currentOrg.name }} has no Korero plan</p>
         <p class="pb-4">Korero runs on the organization's Bazaar Team or Business plan.</p>
         <template v-if="koreroStore.isOrgAdmin(currentOrg)">
           <button class="btn btn-accent" @click="subscribe">

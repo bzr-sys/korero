@@ -26,7 +26,7 @@ function openOrgModal() {
         <p class="opacity-70 pt-2">
           Korero runs in a Bazaar organization on a Team or Business plan.
         </p>
-        <p v-if="lostOrg" role="status" class="mt-4 p-3 rounded bg-slate-100 text-sm">
+        <p v-if="lostOrg" role="status" class="mt-4 p-3 rounded-box bg-base-200 text-sm">
           {{
             config?.currentTeam === user.id
               ? 'Personal workspaces are gone. Pick an organization to continue.'
@@ -35,8 +35,11 @@ function openOrgModal() {
         </p>
       </div>
 
-      <div v-if="orgs.length === 0" class="p-6 rounded border border-slate-200 text-center">
-        <p class="font-bold">You're not in an organization yet</p>
+      <div
+        v-if="orgs.length === 0"
+        class="p-6 rounded-box border border-base-300 bg-base-100 text-center"
+      >
+        <p class="text-lg font-semibold mb-1">You're not in an organization yet</p>
         <p class="pb-4">Create one for your team, or ask a teammate to invite you.</p>
         <button @click="openOrgModal" class="btn btn-accent">
           <BazaarLogoIcon width="16px" /> Create organization

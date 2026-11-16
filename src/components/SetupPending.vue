@@ -21,7 +21,9 @@ async function checkAgain() {
   <div class="overflow-y-auto px-4 py-12">
     <SmallContainer>
       <div class="p-6 mb-12 rounded-box border border-base-300 bg-base-100 text-center">
-        <p class="font-bold">Korero isn't set up for {{ currentWorkspace?.name }} yet</p>
+        <p class="text-lg font-semibold mb-1">
+          Korero isn't set up for {{ currentWorkspace?.name }} yet
+        </p>
         <p class="mb-4">Ask an admin of the organization to open Korero once, then check again.</p>
         <button class="btn btn-accent" :disabled="checking" @click="checkAgain">Check again</button>
       </div>

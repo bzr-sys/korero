@@ -36,7 +36,7 @@ function getGreeting() {
 
   <SmallContainer v-if="channels.length === 0">
     <div class="p-6 rounded-box border border-base-300 bg-base-100 text-center">
-      <p class="mb-4">Create your first channel in this workspace.</p>
+      <p class="mb-4">Create your first channel in this organization.</p>
       <RouterLink :to="{ name: 'newChannel' }" class="btn btn-lg btn-accent"
         >Create Channel</RouterLink
       >

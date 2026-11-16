@@ -16,7 +16,7 @@ function openOrgModal() {
 
 <template>
   <HeadingTwo class="pb-4">Organizations</HeadingTwo>
-  <ul class="rounded border border-slate-200 divide-y divide-slate-200 mb-4">
+  <ul class="rounded-box border border-base-300 bg-base-100 divide-y divide-base-300 mb-4">
     <li v-for="org in orgs" :key="org.id" class="flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
       <div class="min-w-0 flex-1">
         <div class="font-bold truncate">{{ org.name }}</div>
@@ -32,7 +32,9 @@ function openOrgModal() {
           <div v-else class="text-sm text-amber-700">No plan: ask an owner to subscribe</div>
         </template>
       </div>
-      <span v-if="org.id === currentOrg?.id" class="text-sm font-bold text-green-700">Current</span>
+      <span v-if="org.id === currentOrg?.id" class="text-sm font-semibold text-accent"
+        >Current</span
+      >
       <button v-else class="btn btn-sm btn-accent" @click="koreroStore.chooseOrg(org.id)">
         {{ currentOrg ? 'Switch' : 'Open' }}
       </button>

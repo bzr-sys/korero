@@ -77,6 +77,7 @@ onUnmounted(() => {
           > -->
         </RouterLink>
         <button
+          v-if="koreroStore.gate === 'ready'"
           @click="koreroStore.toggleSideBarExpanded"
           :aria-expanded="isSideBarExpanded"
           aria-label="Side bar"
@@ -117,7 +118,7 @@ onUnmounted(() => {
           </div>
 
           <div v-if="currentWorkspace" class="mx-4 mb-4 px-3 py-2 rounded-field bg-base-200">
-            <div class="text-xs opacity-70">Current workspace</div>
+            <div class="text-xs opacity-70">Current organization</div>
             <div>{{ currentWorkspace.name }}</div>
             <div class="text-xs opacity-70">@{{ currentWorkspace.handle }}</div>
           </div>
