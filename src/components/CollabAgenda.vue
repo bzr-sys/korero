@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
 import BaseCard from '@/components/BaseCard.vue'
-import ToastUiEditor from '@/components/ToastUiEditor.vue'
-import ToastUiViewer from '@/components/ToastUiViewer.vue'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import MarkdownView from '@/components/MarkdownView.vue'
 import TextInput from '@/components/TextInput.vue'
 import MeetingNotes from './MeetingNotes.vue'
 import DueDate from '@/components/DueDate.vue'
@@ -14,7 +14,7 @@ const koreroStore = useKoreroStore()
 
 const { currentConversation, user } = storeToRefs(koreroStore)
 
-const editor = ref<InstanceType<typeof ToastUiEditor> | null>(null)
+const editor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
 
 // We know the conversation is a meeting
 const meeting = computed(() => currentConversation.value as Meeting)
@@ -99,7 +99,7 @@ async function addAgendaItem() {
     <!-- Still need to vote, so we show unordered agenda items -->
     <BaseCard v-for="item in collabAgenda.items" :key="item.index" class="mb-4">
       <div>{{ item.title }}</div>
-      <ToastUiViewer v-if="item.text" :initialValue="item.text" />
+      <MarkdownView v-if="item.text" :markdown="item.text" />
       <div>
         <button
           v-if="item.votes.includes(user.id)"
@@ -123,14 +123,10 @@ async function addAgendaItem() {
         <div>Propose agenda item</div>
         <TextInput label="Title" v-model="agendaItemTitle" />
         <!-- Description is optional -->
-        <!-- 556px max w is a temp fix to stop editor breaking out of container -->
-        <ToastUiEditor
+        <MarkdownEditor
           @updateValue="(t) => (agendaItemText = t)"
           label="Agenda item text"
-          height="auto"
-          initialEditType="markdown"
           ref="editor"
-          class="max-w-[556px]"
         />
       </BaseCard>
       <button type="submit" class="btn mt-4">Add agenda item</button>
@@ -142,7 +138,7 @@ async function addAgendaItem() {
     <BaseCard v-for="item in sortedAgenda" :key="item.index">
       <div>{{ item.title }}</div>
 
-      <ToastUiViewer v-if="item.text" :initialValue="item.text" />
+      <MarkdownView v-if="item.text" :markdown="item.text" />
 
       <!-- badges, approve button -->
       <div v-if="collabAgenda.decision === Agency.OWNER">

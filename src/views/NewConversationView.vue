@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
 import BaseCard from '@/components/BaseCard.vue'
-import ToastUiEditor from '@/components/ToastUiEditor.vue'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import HeadingOne from '@/components/HeadingOne.vue'
 import BaseLegend from '@/components/BaseLegend.vue'
 import TextInput from '@/components/TextInput.vue'
@@ -242,12 +242,10 @@ const sendInvitation = ref(true)
         <TextInput label="Title" v-model="title" />
 
         <div>
-          <ToastUiEditor
+          <MarkdownEditor
             v-if="chosenType !== ConversationType.MEETING"
             @updateValue="(t) => (message = t)"
             :label="messageDescription"
-            height="auto"
-            initialEditType="markdown"
             :validationError="messageValidationError"
             class="mb-4"
           />
@@ -287,12 +285,7 @@ const sendInvitation = ref(true)
 
             <template v-if="agendaSetting === Agency.OWNER">
               <!-- Agenda items in a single field for non-collab -->
-              <ToastUiEditor
-                @updateValue="(t) => (agendaText = t)"
-                label="Agenda Items"
-                height="auto"
-                initialEditType="markdown"
-              />
+              <MarkdownEditor @updateValue="(t) => (agendaText = t)" label="Agenda Items" />
             </template>
             <template v-if="agendaSetting === Agency.COLLAB">
               <DateInput label="Agenda item proposal due date" v-model="due" />
@@ -335,12 +328,7 @@ const sendInvitation = ref(true)
                   <TextInput label="Title" v-model="item.title" />
 
                   <!-- Description is optional -->
-                  <ToastUiEditor
-                    @updateValue="(t) => (item.text = t)"
-                    label="Description"
-                    height="auto"
-                    initialEditType="markdown"
-                  />
+                  <MarkdownEditor @updateValue="(t) => (item.text = t)" label="Description" />
                 </BaseCard>
 
                 <button class="btn btn-sm mb-4" type="button" @click="addAgendaItem">
