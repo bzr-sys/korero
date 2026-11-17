@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import ToastUiEditor from '@/components/ToastUiEditor.vue'
-import ToastUiViewer from '@/components/ToastUiViewer.vue'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
+import MarkdownView from '@/components/MarkdownView.vue'
 import { ref } from 'vue'
 import PenToSquareSVG from '@/components/PenToSquareSVG.vue'
 
@@ -16,7 +16,7 @@ const props = withDefaults(
 const edit = ref(false)
 const message = ref('')
 
-const editor = ref<InstanceType<typeof ToastUiEditor> | null>(null)
+const editor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
 const validationError = ref('')
 
 async function cancelEdit() {
@@ -43,11 +43,9 @@ async function saveEdit() {
 
 <template>
   <div v-if="edit">
-    <ToastUiEditor
+    <MarkdownEditor
       @updateValue="(t) => (message = t)"
       :initialValue="props.initialValue"
-      height="auto"
-      initialEditType="markdown"
       ref="editor"
       :validationError="validationError"
     />
@@ -60,7 +58,7 @@ async function saveEdit() {
     <div v-if="canEdit" @click="edit = true" class="absolute top-0 right-0 p-1">
       <PenToSquareSVG />
     </div>
-    <ToastUiViewer :initialValue="props.initialValue" />
+    <MarkdownView :markdown="props.initialValue" />
   </div>
 </template>
 

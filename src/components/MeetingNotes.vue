@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import ToastUiViewer from '@/components/ToastUiViewer.vue'
-import ToastUiEditor from '@/components/ToastUiEditor.vue'
+import MarkdownView from '@/components/MarkdownView.vue'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import MessageForm from '@/components/MessageForm.vue'
 import HeadingTwo from '@/components/HeadingTwo.vue'
@@ -18,7 +18,7 @@ const meeting = computed(() => currentConversation.value as Meeting)
 
 const notes = ref('')
 const notesValidationError = ref('')
-const editor = ref<InstanceType<typeof ToastUiEditor> | null>(null)
+const editor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
 
 async function postMeetingNotes() {
   if (!notes.value) {
@@ -65,19 +65,17 @@ const postMeetingMessages = computed(() => {
     </details>
 
     <HeadingTwo class="pt-4">Meeting Notes</HeadingTwo>
-    <ToastUiViewer :initialValue="meeting.notes" />
+    <MarkdownView :markdown="meeting.notes" />
   </template>
 
   <HeadingTwo v-if="postMeetingMessages.length" class="pt-4">Post-Meeting Messages</HeadingTwo>
   <ChatMessage v-for="message in postMeetingMessages" :key="message.id" :message="message" />
 
   <div v-if="meetingPast && !meeting.notes">
-    <ToastUiEditor
+    <MarkdownEditor
       @updateValue="(t) => (notes = t)"
       label="Add meeting notes"
-      height="auto"
       :validationError="notesValidationError"
-      initialEditType="markdown"
       ref="editor"
     />
     <button @click="postMeetingNotes" class="btn btn-accent mt-4">Post Meeting Notes</button>
