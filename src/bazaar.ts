@@ -1,4 +1,4 @@
-import { BazaarApp, type BazaarOptions } from '@bzr/bazaar'
+import { BazaarApp, LoginType, type BazaarOptions } from '@bzr/bazaar'
 
 const config: BazaarOptions = {
   appId: import.meta.env.VITE_APP_ID || 'test',
@@ -18,4 +18,16 @@ if (import.meta.env.VITE_BAZAAR_URI) {
   config.bazaarUri = 'http://localhost:3377'
 }
 
-export const bzr = new BazaarApp(config)
+// Installed as an app, a login popup opens outside the app's window and can't hand the login back
+class KoreroBazaar extends BazaarApp {
+  login(options?: Parameters<BazaarApp['login']>[0]) {
+    const installed =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as Navigator & { standalone?: boolean }).standalone === true
+    return super.login(
+      options ?? { type: installed ? LoginType.REDIRECT : LoginType.POPUP_FALLBACK }
+    )
+  }
+}
+
+export const bzr = new KoreroBazaar(config)
