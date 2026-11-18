@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
-import { bzr } from '@/bazaar'
+import { bzr, signInReturning } from '@/bazaar'
 import NavBar from './components/NavBar.vue'
 import BaseLogin from './components/BaseLogin.vue'
 import SideBar from './components/SideBar.vue'
@@ -13,6 +13,8 @@ const koreroStore = useKoreroStore()
 koreroStore.autoSignIn()
 
 bzr.onLogin(async () => {
+  // Drop Bazaar's one-time sign-in code from the address bar
+  if (signInReturning) history.replaceState(history.state, '', window.location.pathname)
   koreroStore.autoSignIn()
 })
 </script>
