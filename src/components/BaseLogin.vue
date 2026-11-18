@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { LoginType } from '@bzr/bazaar'
-import { bzr, LANDING_URL, signInRequested, signInReturning } from '@/bazaar'
+import { bzr, installedAsApp, LANDING_URL, signInRequested, signInReturning } from '@/bazaar'
 import LoaderSVG from './LoaderSVG.vue'
 
 // Signed out: send people to the landing page, unless they came from its sign-in
-// buttons or are on their way back from Bazaar's sign-in.
-if (signInRequested) {
+// buttons, opened the installed app, or are on their way back from Bazaar's sign-in.
+if (signInRequested || installedAsApp()) {
   bzr.login({ type: LoginType.REDIRECT })
 } else if (!signInReturning) {
   window.location.replace(LANDING_URL)

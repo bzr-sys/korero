@@ -70,17 +70,11 @@ const router = createRouter({
   ]
 })
 
-router.beforeEach((to, from, next) => {
-  // If route requires auth
-  if (to.matched.some((record) => record.meta.requiresAuth !== false)) {
-    if (!bzr.isLoggedIn()) {
-      // Redirect to the sign in view if no token found and route requires auth
-      next({ name: 'home' })
-      return
-    }
+router.beforeEach((to) => {
+  // Signed out: routes that need auth go to the sign in view
+  if (to.matched.some((record) => record.meta.requiresAuth !== false) && !bzr.isLoggedIn()) {
+    return { name: 'home' }
   }
-
-  next()
 })
 
 export default router

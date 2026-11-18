@@ -1,4 +1,4 @@
-import { BazaarApp, type BazaarOptions } from '@bzr/bazaar'
+import { BazaarApp, LoginType, type BazaarOptions } from '@bzr/bazaar'
 
 // koreroapp.com is the landing page: signed-out visitors go there, and its buttons
 // link back with ?signin. Read the query before the router's first redirect drops it.
@@ -27,4 +27,20 @@ if (import.meta.env.VITE_BAZAAR_URI) {
   config.bazaarUri = 'http://localhost:3377'
 }
 
-export const bzr = new BazaarApp(config)
+export function installedAsApp(): boolean {
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  )
+}
+
+// Installed as an app, a login popup opens outside the app's window and can't hand the login back
+class KoreroBazaar extends BazaarApp {
+  login(options?: Parameters<BazaarApp['login']>[0]) {
+    return super.login(
+      options ?? { type: installedAsApp() ? LoginType.REDIRECT : LoginType.POPUP_FALLBACK }
+    )
+  }
+}
+
+export const bzr = new KoreroBazaar(config)

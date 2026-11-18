@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
 import { MessageType } from '@/types'
-import ToastUiEditor from '@/components/ToastUiEditor.vue'
+import MarkdownEditor from '@/components/MarkdownEditor.vue'
 import { ref } from 'vue'
 
 const props = withDefaults(
@@ -17,7 +17,7 @@ const props = withDefaults(
 
 const koreroStore = useKoreroStore()
 
-const editor = ref<InstanceType<typeof ToastUiEditor> | null>(null)
+const editor = ref<InstanceType<typeof MarkdownEditor> | null>(null)
 const message = ref('')
 const validationError = ref('')
 
@@ -43,11 +43,9 @@ async function postMessage() {
 </script>
 
 <template>
-  <ToastUiEditor
+  <MarkdownEditor
     @updateValue="(t) => (message = t)"
     :label="props.label"
-    height="auto"
-    initialEditType="markdown"
     ref="editor"
     :validationError="validationError"
   />
