@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import HeadingOne from '@/components/HeadingOne.vue'
 import { useKoreroStore } from '@/stores/korero'
 import RecentConversations from '@/components/RecentConversations.vue'
 import SmallContainer from '@/components/SmallContainer.vue'
@@ -18,26 +17,26 @@ function getGreeting() {
   const hour = new Date().getHours()
 
   if (hour >= 5 && hour < 12) {
-    return 'Good Morning'
+    return 'Good morning'
   } else if (hour >= 12 && hour < 18) {
-    return 'Good Afternoon'
+    return 'Good afternoon'
   } else {
-    return 'Good Evening'
+    return 'Good evening'
   }
 }
 </script>
 
 <template>
-  <HeadingOne>Home</HeadingOne>
-  <div class="text-center pt-8 py-8">
-    <div class="text-4xl">{{ getGreeting() }}</div>
-    <div class="text-lg">{{ currentWorkspace?.name }}</div>
-    <div class="opacity-70 text-sm">@{{ currentWorkspace?.handle }}</div>
-  </div>
+  <SmallContainer class="pt-2 pb-8 sm:pt-6 sm:pb-10">
+    <p class="text-sm opacity-70">
+      {{ currentWorkspace?.name }} <span class="opacity-70">@{{ currentWorkspace?.handle }}</span>
+    </p>
+    <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight">{{ getGreeting() }}</h1>
+  </SmallContainer>
 
   <SmallContainer v-if="channels.length === 0">
-    <div class="p-6 rounded border border-slate-200 text-center">
-      <p class="mb-4">Create your first channel in this workspace.</p>
+    <div class="p-6 rounded-box border border-base-300 bg-base-100 text-center">
+      <p class="mb-4">Create your first channel in this organization.</p>
       <RouterLink :to="{ name: 'newChannel' }" class="btn btn-lg btn-accent"
         >Create Channel</RouterLink
       >

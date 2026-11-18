@@ -12,14 +12,12 @@ const dateMin = isoToDatetimeLocalInputStr(new Date().toISOString())
 </script>
 
 <template>
-  <label class="form-control mb-8">
-    <div class="label">
-      <span class="label-text">{{ props.label }}</span>
-    </div>
+  <label class="flex flex-col gap-1.5 mb-6">
+    <span class="text-sm font-medium">{{ props.label }}</span>
     <input
       type="datetime-local"
       v-model="model"
-      class="input input-bordered"
+      class="input w-full sm:max-w-xs"
       :min="dateMin"
       required
     />

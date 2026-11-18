@@ -10,7 +10,7 @@ const html = computed(() => markdownToHTML(props.markdown))
 </script>
 
 <template>
-  <div class="bg-slate-100 p-4 rounded">
+  <div class="bg-base-200 p-4 rounded-box">
     <!-- eslint-disable-next-line vue/no-v-html -- built from the editor's schema, not raw HTML -->
     <div class="md-content" v-html="html"></div>
   </div>
