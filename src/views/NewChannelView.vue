@@ -39,7 +39,7 @@ async function createChannel() {
 
 <template>
   <SmallContainer>
-    <div class="mt-12 p-6 rounded border border-slate-200">
+    <div class="sm:mt-6 p-4 sm:p-6 rounded-box border border-base-300 bg-base-100">
       <HeadingOne class="mb-4">Create a new <span class="text-accent">channel</span></HeadingOne>
       <form @submit.prevent="createChannel">
         <TextInput label="Channel name" v-model="channelName" />

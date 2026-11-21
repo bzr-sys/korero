@@ -21,7 +21,7 @@ koreroStore.setConversation(conversationId as string)
 
 <template>
   <SmallContainer>
-    <div class="mt-12 py-4 px-6 rounded border border-slate-200">
+    <div class="sm:mt-6 p-4 sm:p-6 rounded-box border border-base-300 bg-base-100">
       <template v-if="!koreroStore.currentConversation">
         <p>Cannot find conversation</p>
       </template>

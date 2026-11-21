@@ -36,27 +36,29 @@ function getTypeDescription(type: ConversationType) {
 </script>
 
 <template>
-  <HeadingOne class="pb-2">Create a new <span class="text-accent">conversation</span></HeadingOne>
+  <HeadingOne class="pb-4">Create a new <span class="text-accent">conversation</span></HeadingOne>
   <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-screen-2xl">
     <div
       v-for="(type, index) in ConversationType"
       :key="index"
-      class="py-4 px-6 rounded border border-slate-200 flex flex-col justify-between"
+      class="p-4 sm:p-6 rounded-box border border-base-300 bg-base-100 flex flex-col justify-between hover:border-accent/40 transition-colors"
     >
       <!-- top -->
       <div>
         <div class="flex gap-4 items-center">
-          <ConversationTypeIcon :type="type" class="flex-shrink-0" width="24px" />
+          <span class="grid place-items-center p-2.5 rounded-full bg-mint-soft shrink-0">
+            <ConversationTypeIcon :type="type" width="22px" />
+          </span>
           <div>
-            <h2 class="card-title capitalize">{{ type }}</h2>
+            <h2 class="text-lg font-semibold capitalize">{{ type }}</h2>
           </div>
         </div>
-        <p class="py-4">{{ getTypeDescription(type) }}</p>
+        <p class="py-4 text-sm opacity-80">{{ getTypeDescription(type) }}</p>
       </div>
       <!-- bottom -->
       <RouterLink
         :to="{ name: 'newConversation', params: { channelId }, query: { type } }"
-        class="btn btn-accent btn-block"
+        class="btn btn-accent btn-soft btn-block"
         >Create {{ type }}</RouterLink
       >
     </div>

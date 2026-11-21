@@ -123,23 +123,23 @@ defineExpose({
 
 <template>
   <div>
-    <div v-if="props.label" :id="labelId" class="label label-text">{{ props.label }}</div>
+    <div v-if="props.label" :id="labelId" class="text-sm font-medium mb-1.5">{{ props.label }}</div>
     <!-- To be accessible, the alert role element must be present in the DOM before an alert is triggered -->
     <!-- A browser is notified of an alert when its contents change (assistive technologies are subsequently informed of the alert) -->
     <ValidationError>{{ validationError }}</ValidationError>
-    <div class="rounded border border-slate-300 bg-white focus-within:border-slate-500">
+    <div class="rounded-field border border-base-300 bg-base-100 focus-within:border-accent">
       <div
         v-if="editor"
         role="toolbar"
         aria-label="Formatting"
-        class="flex flex-wrap gap-0.5 border-b border-slate-200 p-1"
+        class="flex flex-wrap gap-0.5 border-b border-base-300 p-1"
       >
         <button
           v-for="tool in tools"
           :key="tool.label"
           type="button"
-          class="h-8 min-w-8 rounded px-1.5 text-sm hover:bg-slate-100"
-          :class="[tool.class, { 'bg-slate-200': editor.isActive(...tool.active) }]"
+          class="h-8 min-w-8 rounded px-1.5 text-sm hover:bg-base-200"
+          :class="[tool.class, { 'bg-mint-soft text-accent': editor.isActive(...tool.active) }]"
           :title="tool.label"
           :aria-label="tool.label"
           :aria-pressed="editor.isActive(...tool.active)"
@@ -150,8 +150,8 @@ defineExpose({
         </button>
         <button
           type="button"
-          class="h-8 min-w-8 rounded px-1.5 text-sm underline hover:bg-slate-100"
-          :class="{ 'bg-slate-200': editor.isActive('link') }"
+          class="h-8 min-w-8 rounded px-1.5 text-sm underline hover:bg-base-200"
+          :class="{ 'bg-mint-soft text-accent': editor.isActive('link') }"
           title="Link"
           aria-label="Link"
           :aria-pressed="editor.isActive('link')"

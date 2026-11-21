@@ -20,8 +20,8 @@ const orderedConversations = computed(() => {
 
 <template>
   <SmallContainer>
-    <h2 v-if="conversations.length > 0" class="font-bold pb-2">Recent Conversations</h2>
-    <div class="py-4 px-6 rounded border border-slate-200">
+    <h2 v-if="conversations.length > 0" class="font-semibold pb-3">Recent conversations</h2>
+    <div class="p-4 sm:p-6 rounded-box border border-base-300 bg-base-100">
       <div v-if="conversations.length === 0">
         <p class="pb-4">To get started, create a conversation in one of your channels:</p>
         <ul>

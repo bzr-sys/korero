@@ -11,7 +11,7 @@ defineProps<{ conversations: Conversation[] }>()
       v-for="conversation in conversations"
       :key="conversation.id"
       :conversation="conversation"
-      class="[&:not(:last-child)]:border-b border-slate-200 [&:not(:last-child)]:pb-4"
+      class="[&:not(:last-child)]:border-b border-base-300 [&:not(:last-child)]:pb-4"
     />
   </ul>
 </template>

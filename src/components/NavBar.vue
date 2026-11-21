@@ -66,7 +66,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <header class="bg-slate-50 border-b border-slate-200">
+  <header class="bg-base-100 border-b border-base-300">
     <div class="px-4 py-2 h-12 flex justify-between gap-4 items-center">
       <!-- left -->
       <div class="flex flex-row-reverse gap-4 items-center">
@@ -77,10 +77,11 @@ onUnmounted(() => {
           > -->
         </RouterLink>
         <button
+          v-if="koreroStore.gate === 'ready'"
           @click="koreroStore.toggleSideBarExpanded"
           :aria-expanded="isSideBarExpanded"
           aria-label="Side bar"
-          class="lg:hidden"
+          class="lg:hidden grid place-items-center size-9 -ml-2 rounded-field hover:bg-base-200"
         >
           <HamburgerSVG width="14px" />
         </button>
@@ -89,7 +90,7 @@ onUnmounted(() => {
       <div class="relative">
         <button
           @click="toggleUserDropdown"
-          class="flex items-center gap-1"
+          class="flex items-center gap-1.5 rounded-full p-1 pr-2 hover:bg-base-200"
           :aria-expanded="isUserDropdownExpanded"
           aria-label="User sub menu"
           ref="user-dropdown-button"
@@ -101,32 +102,32 @@ onUnmounted(() => {
         <div
           :class="
             isUserDropdownExpanded
-              ? `absolute top-[130%] right-0 bg-white rounded shadow z-30`
+              ? `absolute top-[calc(100%+0.5rem)] right-0 bg-base-100 border border-base-300 rounded-box shadow-lg z-50 overflow-hidden`
               : `sr-only`
           "
           :aria-hidden="!isUserDropdownExpanded"
           ref="user-dropdown"
         >
-          <div class="flex flex-wrap gap-4 px-4 py-6 min-w-[calc(320px-2rem)]">
+          <div class="flex gap-4 px-4 py-5 w-[calc(100vw-2rem)] max-w-80">
             <WorkspaceAvatar size="medium" />
             <div>
-              <div class="capitalize text-lg font-bold">{{ user.name }}</div>
+              <div class="capitalize text-lg font-semibold">{{ user.name }}</div>
               <div class="opacity-70 text-sm">{{ user.email }}</div>
               <div class="opacity-70 text-sm">@{{ user.handle }}</div>
             </div>
           </div>
 
-          <div v-if="currentWorkspace" class="px-4 pb-6">
-            <div class="text-xs opacity-70">Current workspace</div>
+          <div v-if="currentWorkspace" class="mx-4 mb-4 px-3 py-2 rounded-field bg-base-200">
+            <div class="text-xs opacity-70">Current organization</div>
             <div>{{ currentWorkspace.name }}</div>
             <div class="text-xs opacity-70">@{{ currentWorkspace.handle }}</div>
           </div>
 
-          <ul class="py-1 border-t border-slate-200" @click="closeUserDropdown">
+          <ul class="py-1 border-t border-base-300" @click="closeUserDropdown">
             <li v-if="currentWorkspace">
               <RouterLink
                 :to="{ name: 'settings' }"
-                class="flex gap-2 items-center hover:bg-slate-100 w-full px-4 py-2"
+                class="flex gap-2 items-center hover:bg-base-200 w-full px-4 py-2"
                 ><SettingsSVG width="18px" /> <span>Settings</span></RouterLink
               >
             </li>
@@ -134,7 +135,7 @@ onUnmounted(() => {
             <li>
               <button
                 @click="logOut"
-                class="flex gap-2 items-center hover:bg-slate-100 w-full px-4 py-2"
+                class="flex gap-2 items-center hover:bg-base-200 w-full px-4 py-2"
               >
                 <SignOutSVG width="18px" /> <span>Sign out</span>
               </button>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useKoreroStore } from '@/stores/korero'
-import { bzr } from '@/bazaar'
+import { bzr, signInReturning } from '@/bazaar'
 import NavBar from './components/NavBar.vue'
 import BaseLogin from './components/BaseLogin.vue'
 import SideBar from './components/SideBar.vue'
@@ -13,6 +13,8 @@ const koreroStore = useKoreroStore()
 koreroStore.autoSignIn()
 
 bzr.onLogin(async () => {
+  // Drop Bazaar's one-time sign-in code from the address bar
+  if (signInReturning) history.replaceState(history.state, '', window.location.pathname)
   koreroStore.autoSignIn()
 })
 </script>
@@ -35,7 +37,7 @@ bzr.onLogin(async () => {
           <SideBar />
           <!-- height = 100vh - navbar header height -->
           <main class="flex-grow h-[calc(100vh-12*0.25rem)] overflow-hidden">
-            <div class="px-6 pt-4 pb-16 overflow-y-auto h-full">
+            <div class="px-4 sm:px-8 pt-6 pb-16 overflow-y-auto h-full">
               <RouterView />
             </div>
           </main>
